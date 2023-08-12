@@ -1,0 +1,53 @@
+---
+title: | 
+  | Bitcoin volatility analysis
+  | 
+author: | 
+  | Enrico Grimaldi
+  | 1884443
+  |
+date: | 
+  | Statistical Methods for Data Science 2
+  |
+  | La Sapienza University of Rome
+  | a.y. 2022/2023
+  |
+  | Final project for the course:
+output: 
+  pdf_document: default
+  html_document: default
+toc: no
+number_sections: true
+bibliography: bibliography.bib
+biblio-style: "apalike"
+fontsize: 12pt
+header-includes:
+  - \usepackage{adjustbox}
+  - \usepackage{amsmath}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, results = "hide")
+```
+
+```{r}
+# import libraries 
+library(tidyverse)
+library(gt)
+library(summarytools)
+library(gridExtra)
+library(ggplot2)
+library(corrplot)
+library(reshape2)
+library(R2jags)
+library(mcmcplots)
+library(caret)
+```
+
+
+\newpage
+```{=latex}
+\setcounter{tocdepth}{4}
+\tableofcontents
+```
+\newpage
