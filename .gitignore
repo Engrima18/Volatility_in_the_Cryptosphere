@@ -49,5 +49,8 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 
-# exclude the data set
+# data set
 *.csv
+
+# bibliography
+*.bib
