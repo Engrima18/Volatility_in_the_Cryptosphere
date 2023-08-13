@@ -45,6 +45,14 @@ library(reshape2)
 library(R2jags)
 library(mcmcplots)
 library(caret)
+
+library(fitdistrplus)
+library(viridis)
+
+# import scripts and custom modules
+# source("jags_models/GARCH.R")
+source("functions.R")
+# source("jags_models/MS-GARCH.R")
 ```
 
 
@@ -57,8 +65,22 @@ library(caret)
 
 # 1. Introduction
 
-## 1.1 Returns rather than prices
+
+
+# 2. The data set
+
+The [Yahoo Finance Bitcoin Historical Data](https://www.kaggle.com/datasets/arslanr369/bitcoin-price-2014-2023) from Kaggle, spanning from 2014 to 2023, capture the evolution of Bitcoin's price over a decade, offering an overview of the following features about Bitcoin value:
+
+```{r results='asis'}
+# give a look
+head(data) %>%gt() %>% tab_options(., table.width = 300)
+```
+
+Of the kaggle data set we are solely interested in one of the features: the adjusted closing price of bitcoin (in terms of BTC/USD value).
+
+## 2.1. Returns rather than prices
 In the analysis of financial data, asset equity returns are typically the main variable of interest (rather than prices) There are at least two reasons for this:
+
 1. Returns are easier to interpret
 2. Returns have statistical properties which are easier to handle (e.g. stationarity)
 
@@ -82,7 +104,34 @@ $$
 \epsilon_t= 100 \cdot (log(P_t)-log(P_{t-1}) )
 $$
 
-# 2. The data set
+```{r}
+data$Returns <- c(NA,returns)
+data$Lreturns <- c(NA,log.returns)
+data$Date <- as.Date(data$Date)
+ggplot(data) +
+  geom_line(aes(x = Date, y = Adj.Close, color = "Price"), size = 1) +
+  geom_smooth(aes(x = Date, y = Returns, color = "Returns"), size = 1) +
+  labs(title = "Price and Returns Time Series",
+       x = "Date",
+       y = "Value",
+       color = "Legend") +
+  scale_color_manual(values = c("Price" = "blue", "Returns" = "red"))
+```
+
+
+## 2.2. Searching for a prior
+
+We can then begin to analyze the distribution of our data.
+
+
+```{r, figures-side, fig.show="hold", out.width="50%"}
+fit_distros(prices)
+fit_distros(returns, flag = FALSE)
+```
+
+
+
+
 
 # 3. First model
 
@@ -90,22 +139,64 @@ $$
 
 ### 3.1.1. The ARCH model
 
-In order to capture volatility clustering, in 1982 Robert Engle
-proposed the _AutoRegressive Conditional Heteroskedasticity_ (ARCH) model.
-The ARCH(1) model is given by:
+
+The **ARCH (Autoregressive Conditional Heteroskedasticity)** model is a statistical time series model commonly used in econometrics and finance to capture volatility clustering in financial data. It was introduced by Robert F. Engle in the early 1980s as a way to model the changing volatility observed in financial returns over time. The ARCH model is particularly useful for analyzing financial time series data where the volatility, or the variation in the magnitude of returns, is not constant and can exhibit patterns of clustering or persistence.
+The **ARCH(1)** model is given by:
 
 $$
-y_t = \sqrt{\sigma^2_t} \cdot z_t\\
+y_t = \sqrt{\sigma^2_t} \cdot z_t
+$$
+$$
 z_t \sim D(0,1)
 $$
+
 where $D$ is a distribution with mean 0 and variance 1 and in our case $D(0,1) = N(0,1)$. This implies that $y_t = N(\mu, \sigma^2_t)$ and
 
 $$
-\sigma^2= \omega + \alpha\epsilon^2_{t-1} + \beta\sigma^2_{t-1}
+\sigma^2= \omega + \alpha y^2_{t-1}
 $$
 
 where $w > 0, \beta > 0, \alpha+\beta < 1$ (in order to have
 stationarity).
+
+This variables and parameters have a specific meaning in our model:
+
+>- $y_t$ is the observed value at time t
+>- $z_t$ is the white noise (innovation) term at time t
+>- $\sigma_t^2$ is the conditional variance of $y_t$ 
+>- $\omega$ is the baseline volatility
+>- $\alpha$ represents the impact of past squared residuals on the conditional variance
+
+### 3.1.2. The GARCH model
+
+The **GARCH (Generalized Autoregressive Conditional Heteroskedasticity)** model is an extension of the ARCH (Autoregressive Conditional Heteroskedasticity) model that further captures and models the time-varying volatility in financial and economic time series data. Introduced by Tim Bollerslev in the mid-1980s, the GARCH model addresses some of the limitations of the basic ARCH model by incorporating past values of the conditional variance itself into the volatility modeling process.
+
+Mathematically, a **GARCH(1,1,)** model is given by the following structure:
+$$
+y_t = \sqrt{\sigma^2_t} \cdot z_t
+$$
+
+
+$$
+z_t \sim D(0,1)
+$$
+
+$$
+\sigma^2= \omega + \alpha\epsilon^2_{t-1} + \beta\sigma^2_{t-1}
+$$
+As can be seen, the only difference from the previous model is the dependence of volatility on past volatility values (conditional variance) and the introduction of a new $\beta$ parameter to govern this relationship.
+
+GARCH (Generalized Autoregressive Conditional Heteroskedasticity) and ARCH (Autoregressive Conditional Heteroskedasticity) are both models used to analyze and forecast volatility in financial time series data, such as the volatility of Bitcoin prices. The preference for GARCH over ARCH for modeling Bitcoin volatility is based on several factors:
+
+1. Flexibility and Improved Modeling: GARCH is an extension of the ARCH model that allows for more complex and flexible modeling of volatility dynamics. GARCH models incorporate both lagged conditional variances (as in ARCH) and lagged conditional variances of the squared past returns. This added flexibility often helps capture more intricate volatility patterns observed in financial data like Bitcoin prices.
+
+2. Better Fit to Real Data: Cryptocurrencies like Bitcoin are known for their unique volatility characteristics, including periods of extreme volatility followed by relative stability. GARCH models with their ability to capture changing volatility patterns over time are often better suited to capture these fluctuations and trends in the data.
+
+3. Accommodation of Volatility Clustering: Volatility clustering refers to the phenomenon where periods of high volatility tend to cluster together over time. GARCH models can capture this clustering effect by allowing for the persistence of volatility shocks, making them more suitable for assets like Bitcoin that often exhibit this behavior.
+
+4. More Sophisticated Volatility Forecasting: GARCH models can generate volatility forecasts that are more accurate and reliable compared to ARCH models. This is crucial for risk management and derivative pricing, where accurate volatility forecasts are essential.
+
+5. Statistical Significance and Model Selection: GARCH models often provide more accurate parameter estimates and better model fit, as determined by statistical tests and criteria. This helps in selecting a more appropriate and reliable model for analyzing Bitcoin volatility.
 
 
 # 4. Second model
