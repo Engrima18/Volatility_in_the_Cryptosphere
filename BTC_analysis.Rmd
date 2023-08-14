@@ -332,3 +332,5 @@ where $D(0, h_{k,t, \xi_k})$ $D(0, h_{k,t,\xi_k})$ is a continuous distribution 
 GARCH model. 
 
 We define the standardized innovations as $n_{k,t} := y_t/\sqrt{h_{z,t}} \overset{\mathrm{iid}}{\sim} D(0,1,\xi_k)$
+
+
