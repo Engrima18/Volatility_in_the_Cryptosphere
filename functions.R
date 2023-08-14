@@ -15,10 +15,12 @@ eval.returns <- function(prices){
   return(returns)
 }
 
+# update the data set
 data <- read.csv("BTC-USD.csv")
 prices <- data$Adj.Close
-log.returns <- eval.log.returns(prices)
-returns <- eval.returns(prices)
+data$LogReturns <- c(NA, eval.log.returns(prices))
+data$Returns <- c(NA, eval.returns(prices))
+data$Date <- as.Date(data$Date)
 
 # fit distributions and plot ----------------------------------------------
 
@@ -60,3 +62,49 @@ fit_distros <- function(data, flag=TRUE){
   grid()
 }
 
+
+# plot decomposition of timeseries ------------------------------------
+
+decomp.plot <- function(x, title = NULL, col="black")
+{
+  if(is.null(title)){
+    main <- paste("Decomposition of", title, "time series")
+  }
+  else{
+    main <- paste("Decomposition of", title, "time series")
+  }
+  plot(cbind(observed =x$x, trend = x$trend, seasonal = x$seasonal,
+             random = x$random), main = main, col=col)
+}
+
+
+# plot the acf ------------------------------------------------------------
+
+acf.plot <- function(ret){
+  # Plot ACF for Returns
+  returns_acf <- acf(ret[-1], plot = FALSE)
+  returns_acf_df <- data.frame(lag = returns_acf$lag, acf = returns_acf$acf)
+  
+  significance_level <- qnorm((1 + 0.95)/2)/sqrt(sum(!is.na(data$LogReturns[-1])))
+  
+  plot1 <- ggplot(returns_acf_df, aes(x = lag, y = acf)) +
+    geom_errorbar(mapping=aes(ymax=acf, ymin=0), stat = "identity", color = "darkblue", width = 0.5) +
+    geom_hline(yintercept = 0, color = "gray30") +
+    geom_hline(yintercept = c(-significance_level, significance_level),
+               linetype = "dashed", color = "red") +
+    labs(title = "ACF for Returns", x = "Lag", y = "ACF")
+  
+  # Plot ACF for Absolute Returns
+  abs_returns_acf <- acf(abs(ret[-1]), plot = FALSE)
+  abs_returns_acf_df <- data.frame(lag = abs_returns_acf$lag, acf = abs_returns_acf$acf)
+  
+  plot2 <- ggplot(abs_returns_acf_df, aes(x = lag, y = acf)) +
+    geom_errorbar(mapping=aes(ymax=acf, ymin=0), stat = "identity", color = "darkblue", width = 0.5) +
+    geom_hline(yintercept = c(-significance_level, significance_level),
+               linetype = "dashed", color = "red") +
+    geom_hline(yintercept = 0, color = "gray30") +
+    labs(title = "ACF for Absolute Returns", x = "Lag", y = "ACF")
+  
+  print(plot1)
+  print(plot2)
+}

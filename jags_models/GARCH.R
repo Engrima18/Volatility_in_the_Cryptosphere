@@ -1,7 +1,7 @@
 library(R2jags)
+source("functions.R")
 
-data <- read.csv("BTC-USD.csv")
-y <- data$Adj.Close
+y <- data$LogReturns
 N <- length(y)
 
 # Jags code to fit the model to the simulated data
