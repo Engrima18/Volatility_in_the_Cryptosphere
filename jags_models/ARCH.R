@@ -29,7 +29,7 @@ model
 arch_model_data <- list(N = N, y = y)
 
 # Choose the parameters to watch
-arch_model_parameters <- c("omega", "alpha", "mu")
+arch_model_parameters <- c("omega", "alpha", "mu", "sigma")
 
 # Run the model
 arch_model <- jags(

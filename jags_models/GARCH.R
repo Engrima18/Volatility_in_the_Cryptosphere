@@ -30,7 +30,7 @@ model
 garch_model_data <- list(N = N, y = y)
 
 # Choose the parameters to watch
-garch_model_parameters <- c("omega", "alpha", "beta", "mu")
+garch_model_parameters <- c("omega", "alpha", "beta", "mu", "sigma")
 
 # Run the model
 garch_model <- jags(

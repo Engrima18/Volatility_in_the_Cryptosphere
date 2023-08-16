@@ -49,11 +49,17 @@ library(fitdistrplus)
 library(viridis)
 library(tseries)
 library(nortsTest)
+library(MCMCvis)
+library(ggmcmc)
+library(bridgesampling)
+library(bbsBayes)
 
 # import scripts and custom modules
-# source("jags_models/GARCH.R")
 source("functions.R")
-# source("jags_models/MS-GARCH.R")
+
+source("jags_models/GARCH.R")
+source("jags_models/ARCH.R")
+source("jags_models/tstudentGARCH.R")
 ```
 
 
@@ -266,48 +272,16 @@ Lm.test(data$LogReturns[-1])
 ```
 With this result we can claim with a large evidence that our time series is NOT homoscedastic!
 
-## 2.5. Searching for a prior
 
-We can then begin to analyze the distribution of our data. Let's start with a simple visualization of the distribution (histogram) of our data and then try to fit some possible density functions by selecting a few by intuition and using MLE for parameters.
+# 3. Models
 
-
-```{r, figures-side, fig.show="hold", out.width="50%"}
-fit_distros(data$Adj.Close)
-fit_distros(data$LogReturns[-1], flag = FALSE)
-```
-
-We note that fortunately for log-returns a normal distribution seems quite consistent for a possible prior assumption in Bayesian framework.
-
-However, we are not satisfied with a simple visualization of this kind and continue the investigation with a **Kolmogorov-Smirnov test**, a _goodnes of fit_ test. The resulting p-value, however, indicates that the population does not actually exhibit normal distribution, rejecting the null hypothesis.
-
-```{r results='markup'}
-ks.test(data$LogReturns[-1], "pnorm", mean = mean(data$LogReturns[-1]),
-        sd = sd(data$Returns[-1]))
-```
-We then disprove our initial assumption of a normal prior and via a _QQ plot_ the obvious differences between the current data and the normal distribution that we were previously unable to capture.
-
-```{r}
-ggplot(data, aes(sample=LogReturns)) +
-  stat_qq(color="purple") + 
-  stat_qq_line() +
-  labs(title = "QQ Plot for returns")
-```
-
-Traditionally, the errors (and so the returns) have been assumed to be Gaussian, however, it
-has been widely acknowledged that financial returns display fat tails and are not conditionally
-Gaussian. Gaussian GARCH models cannot quite capture the key properties of asset returns and to address this, researchers (Bollerslev (1987), He & Teräsvirta (1999) and Bai et al. (2003)) have explored alternative distributions to model asset returns.
-One approach is to assume that the returns are IID and follow a Student’s t-distribution (t-Student) instead of a normal distribution. The t-Student distribution allows for fatter tails, meaning it assigns higher probabilities to extreme events compared to the normal distribution. For example we'll try to use a GARCH model with a t-student prior distribution for returns:
-
-$$
-y_t = \sigma_t z_t \sim t(d)
-$$
-
-# 3. Model selection
+Enunciare caratteristiche che un ipotetico modello deve seguire
 
 
 ## 3.1. The ARCH model
 
 The **ARCH (Autoregressive Conditional Heteroskedasticity)** model (Engle, 1982) is a statistical time series model commonly used in econometrics and finance to capture volatility clustering in financial data. It was introduced by Robert F. Engle in the early 1980s as a way to model the changing volatility observed in financial returns over time. The ARCH model is particularly useful for analyzing financial time series data where the volatility, or the variation in the magnitude of returns, is not constant and can exhibit patterns of clustering or persistence.
+
 The **ARCH(1)** model is given by:
 
 $$
@@ -340,7 +314,7 @@ z_t &\sim N(\mu, 1) \rightarrow y_t= \sigma_t z_t \sim N(\mu, \sigma_t^2)  \nonu
 $$
 It follows the above model coded with JAGS.
 
-```{r include=TRUE}
+```{r echo=TRUE}
 arch_model_code <- "
 model
 {
@@ -359,12 +333,13 @@ model
   omega ~ dunif(0, 10)
   alpha ~ dunif(0, 1)
 }
+"
 ```
 
 
 
 
-### 3.1. The GARCH model
+## 3.2. The Gaussian GARCH model
 
 The **GARCH (Generalized Autoregressive Conditional Heteroskedasticity)** model (Bollerslev, 1986) is an extension of the ARCH (Autoregressive Conditional Heteroskedasticity) model that further captures and models the time-varying volatility in financial and economic time series data. Introduced by Tim Bollerslev in the mid-1980s, the GARCH model addresses some of the limitations of the basic ARCH model by incorporating past values of the conditional variance itself into the volatility modeling process.
 
@@ -391,7 +366,7 @@ GARCH (Generalized Autoregressive Conditional Heteroskedasticity) and ARCH (Auto
 
 5. Statistical Significance and Model Selection: GARCH models often provide more accurate parameter estimates and better model fit, as determined by statistical tests and criteria. This helps in selecting a more appropriate and reliable model for analyzing Bitcoin volatility.
 
-We then define our _hierarchical bayesian ARCH model_ selecting the correct set of distributions for the above parameters and variable. We use the following setup:
+We then define our _hierarchical bayesian GARCH model_ selecting the correct set of distributions for the above parameters and variable. We use the following setup:
 
 $$
 \begin{aligned}
@@ -405,7 +380,7 @@ $$
 
 It follows the above model coded with JAGS.
 
-```{r include=TRUE}
+```{r echo=TRUE}
 garch_model_code <- "
 model
 {
@@ -416,7 +391,8 @@ model
   }
   sigma[1] ~ dunif(0,10)
   for(t in 2:N) {
-    sigma[t] <- sqrt(omega + alpha * pow(y[t-1] - mu, 2) + beta * pow(sigma[t-1], 2))
+    sigma[t] <- sqrt(omega + alpha * pow(y[t-1] - mu, 2) +
+                     beta * pow(sigma[t-1], 2))
   }
 
   # Priors
@@ -428,7 +404,289 @@ model
 "
 ```
 
-# 4. Second model
+## 3.3. The Student's $t$ GARCH model
+
+We can then begin to analyze the distribution of our data. Let's start with a simple visualization of the distribution (histogram) of our data and then try to fit some possible density functions by selecting a few by intuition and using MLE for parameters.
+
+
+```{r, figures-side, fig.show="hold", out.width="50%"}
+fit_distros(data$Adj.Close)
+fit_distros(data$LogReturns[-1], flag = FALSE)
+```
+
+We note that fortunately for log-returns a normal distribution seems quite consistent for a possible prior assumption in Bayesian framework.
+
+However, we are not satisfied with a simple visualization of this kind and continue the investigation with a **Kolmogorov-Smirnov test**, a _goodnes of fit_ test. The resulting p-value, however, indicates that the population does not actually exhibit normal distribution, rejecting the null hypothesis.
+
+```{r results='markup'}
+ks.test(data$LogReturns[-1], "pnorm", mean = mean(data$LogReturns[-1]),
+        sd = sd(data$Returns[-1]))
+```
+We then disprove our initial assumption of a normal prior and via a _QQ plot_ the obvious differences between the current data and the normal distribution that we were previously unable to capture.
+
+```{r}
+ggplot(data, aes(sample=LogReturns)) +
+  stat_qq(color="purple") + 
+  stat_qq_line() +
+  labs(title = "QQ Plot for returns")
+```
+
+Traditionally, the errors (and so the returns) have been assumed to be Gaussian, however, it
+has been widely acknowledged that financial returns display fat tails and are not conditionally
+Gaussian. Gaussian GARCH models cannot quite capture the key properties of asset returns and to address this, researchers (Bollerslev (1987), He & Teräsvirta (1999) and Bai et al. (2003)) have explored alternative distributions to model asset returns.
+One approach is to assume that the returns are IID and follow a Student’s t-distribution (t-Student) instead of a normal distribution. The t-Student distribution allows for fatter tails, meaning it assigns higher probabilities to extreme events compared to the normal distribution.
+
+```{r}
+ggplot(data, aes(sample = LogReturns)) +
+  stat_qq(distribution = qt, dparams = list(df = 8, ncp=0.01), color = "purple") +
+  stat_qq_line(distribution = qt, dparams = list(df = 8, ncp=0.01)) +
+  labs(title = "QQ Plot for Student's t-distribution")
+```
+
+
+We use a GARCH model with a **non-central t-student** prior distribution for returns:
+
+$$
+\begin{aligned}
+y_t = \sigma_t z_t &\sim t(\mu, \sigma_t^2, \nu)  \nonumber \\
+\mu &\sim N(0, 100^2) \nonumber \\
+\omega &\sim U(0, 10) \nonumber \\
+\alpha &\sim U(0, 1) \nonumber \\
+\beta &\sim U(0, 1)
+\end{aligned}
+$$
+
+where:
+
+>- $\delta = \mu \cdot \sigma^{- \frac{1}{2}}_t$ is the non-centrality parameter
+>- $\nu = 8$ represents the degrees of freedom and we set it equal to a constant according to a study provided in ["Notes on the econometrics of asset allocation and risk measurement"](https://didattica.unibocconi.it/mypage/index.php?IdUte=48917&idr=3008) (Favero)
+
+Here the code:
+
+```{r echo=TRUE}
+tstud_model_code <- "
+model
+{
+  # Likelihood
+  for (t in 1:N) {
+    y[t] ~ dt(mu, tau[t], 8)
+    tau[t] <- 1/pow(sigma[t], 2)
+  }
+  sigma[1] ~ dunif(0,10)
+  for(t in 2:N) {
+    sigma[t] <- sqrt(omega + alpha * pow(y[t-1] - mu, 2) +
+                     beta * pow(sigma[t-1], 2))
+  }
+
+  # Priors
+  mu ~ dnorm(0.0, 0.01)
+  omega ~ dunif(0, 10)
+  alpha ~ dunif(0, 1)
+  beta ~ dunif(0, 1)
+}
+"
+```
+
+# 4. Model comparision
+
+Spiegare come procederemo per la comparazione tra modelli
+
+## 4.1. Simple inferential findings and results
+
+Results from the Gaussian ARCH(1) model:
+
+```{r results='markup'}
+as.data.frame(MCMCsummary(arch_model, 
+              params = arch_model_parameters, 
+              HPD = TRUE, 
+              hpd_prob = 0.95, 
+              round = 8))
+```
+
+```{r}
+par(mfrow = c(1, 3))
+hist(arch_model$BUGSoutput$sims.list$omega, breaks = 30, main= "Distribution of omega",
+     col="aquamarine", prob=T, xlab="Omega")
+grid()
+hist(arch_model$BUGSoutput$sims.list$alpha, breaks = 30, main= "Distribution of alpha",
+     col="salmon", prob=T, xlab="Alpha")
+grid()
+hist(arch_model$BUGSoutput$sims.list$sigma, breaks = 50, main= "Distribution of sigma",
+     col="lightblue", prob=T, xlab="Sigma")
+grid()
+```
+
+
+Results from the Gaussian GARCH(1,1) model:
+
+```{r results='markup'}
+as.data.frame(MCMCsummary(garch_model, 
+              params = garch_model_parameters, 
+              HPD = TRUE, 
+              hpd_prob = 0.95, 
+              round = 8))
+```
+
+```{r}
+par(mfrow = c(2, 2))
+hist(garch_model$BUGSoutput$sims.list$omega, breaks = 30, main= "Distribution of omega",
+     col="aquamarine", prob=T, xlab="Omega")
+grid()
+hist(garch_model$BUGSoutput$sims.list$alpha, breaks = 30, main= "Distribution of alpha",
+     col="salmon", prob=T, xlab="Alpha")
+grid()
+hist(garch_model$BUGSoutput$sims.list$alpha, breaks = 30, main= "Distribution of beta",
+     col="pink", prob=T, xlab="Beta")
+grid()
+hist(garch_model$BUGSoutput$sims.list$sigma, breaks = 50, main= "Distribution of sigma",
+     col="lightblue", prob=T, xlab="Sigma")
+grid()
+```
+
+
+Results from the Student's $t$ GARCH(1,1) model:
+
+```{r results='markup'}
+as.data.frame(MCMCsummary(tstud_garch_model, 
+              params = tstud_model_parameters, 
+              HPD = TRUE, 
+              hpd_prob = 0.95, 
+              round = 8))
+```
+
+```{r}
+par(mfrow = c(2, 2))
+hist(tstud_garch_model$BUGSoutput$sims.list$omega, breaks = 30, main= "Distribution of omega",
+     col="aquamarine", prob=T, xlab="Omega")
+grid()
+hist(tstud_garch_model$BUGSoutput$sims.list$alpha, breaks = 30, main= "Distribution of alpha",
+     col="salmon", prob=T, xlab="Alpha")
+grid()
+hist(tstud_garch_model$BUGSoutput$sims.list$beta, breaks = 30, main= "Distribution of beta",
+     col="pink", prob=T, xlab="Beta")
+grid()
+hist(tstud_garch_model$BUGSoutput$sims.list$sigma, breaks = 50, main= "Distribution of sigma",
+     col="lightblue", prob=T, xlab="Sigma")
+grid()
+```
+
+
+## 4.2. Comparision through DIC
+
+```{r}
+# Create a dataframe
+model_comparison <- data.frame(
+  Model = c("ARCH", "GARCH", "t Student GARCH"),
+  DIC = c(arch_model$BUGSoutput$DIC , garch_model$BUGSoutput$DIC,
+          tstud_garch_model$BUGSoutput$DIC),
+  n.chains = c(arch_model$BUGSoutput$n.chains , garch_model$BUGSoutput$n.chains,
+          tstud_garch_model$BUGSoutput$n.chains),
+  n.iter = c(arch_model$BUGSoutput$n.iter , garch_model$BUGSoutput$n.iter,
+          tstud_garch_model$BUGSoutput$n.iter),
+  pD = c(arch_model$BUGSoutput$pD , garch_model$BUGSoutput$pD,
+          tstud_garch_model$BUGSoutput$pD))
+model_comparison %>%gt() %>% tab_options(., table.width = 500)
+```
+
+
+## 4.3. Comparision through Marginal Likelihood
+
+
+```{r}
+# Function to calculate log posterior for ARCH model
+# log_posterior_ARCH <- function(samples.row, data) {
+#   mu <- samples.row[, "mu"]
+#   omega <- samples.row[, "omega" ]
+#   alpha <- samples.row[,"alpha"]
+#   sigma <- sqrt(omega + alpha * (data$y[-1] - mu)^2)
+#   
+#   res <- sum(dnorm(data$y, mu, sigma, log = TRUE)) +
+#     dunif(omega, 0, 10, log = TRUE) +
+#     dunif(alpha, 0, 1, log = TRUE) +
+#     dnorm(mu, 0.0, 0.01, log = TRUE)
+#   return(res)
+# }
+# 
+# # Function to calculate log posterior for GARCH model
+# log_posterior_GARCH <- function(samples.row, data) {
+#   mu <- samples.row[, "mu" ]
+#   sigma <- samples.row[ paste0("sigma[", seq_along(data$y), "]") ]
+#   omega <- samples.row[[ "omega" ]]
+#   alpha <- samples.row[[ "alpha" ]]
+#   beta <- samples.row[[ "beta" ]]
+#   
+#   sum(dnorm(data$y, mu, 1/sqrt(sigma^2), log = TRUE)) +
+#     dunif(sigma[1], 0, 10, log = TRUE) +
+#     sum(dnorm(sigma[2:length(sigma)], sqrt(omega + alpha * (data$y[-1] - mu)^2 + beta * sigma[1:(length(sigma)-1)]^2), log = TRUE)) +
+#     dnorm(mu, 0.0, 0.01, log = TRUE) +
+#     dunif(omega, 0, 10, log = TRUE) +
+#     dunif(alpha, 0, 1, log = TRUE) +
+#     dunif(beta, 0, 1, log = TRUE)
+# }
+```
+
+```{r}
+# Specify parameter bounds for ARCH model (H0)
+# cn_ARCH <- colnames(arch_model$BUGSoutput$sims.matrix)
+# cn_ARCH <- cn_ARCH[cn_ARCH != "deviance"]
+# lb_ARCH <- rep(-Inf, length(cn_ARCH))
+# ub_ARCH <- rep(Inf, length(cn_ARCH))
+# names(lb_ARCH) <- names(ub_ARCH) <- cn_ARCH
+# lb_ARCH[["sigma[1]"]] <- 0
+# 
+# # Specify parameter bounds for GARCH model (H1)
+# cn_GARCH <- colnames(garch_model$BUGSoutput$sims.matrix)
+# cn_GARCH <- cn_GARCH[cn_GARCH != "deviance"]
+# lb_GARCH <- rep(-Inf, length(cn_GARCH))
+# ub_GARCH <- rep(Inf, length(cn_GARCH))
+# names(lb_GARCH) <- names(ub_GARCH) <- cn_GARCH
+# lb_GARCH[["sigma[1]"]] <- 0
+```
+
+```{r}
+# # compute log marginal likelihood via bridge sampling for H0
+# H0.bridge <- bridge_sampler(samples = arch_model, data = arch_model_data,
+#                             log_posterior = log_posterior_ARCH, lb = lb_ARCH,
+#                             ub = ub_ARCH, silent = FALSE)
+# print(H0.bridge)
+```
+
+```{r}
+# compute log marginal likelihood via bridge sampling for H0
+# H0.bridge <- bridge_sampler(samples = arch_model, data = arch_model_data,
+#                             log_posterior = log_posterior_ARCH, lb = lb_ARCH,
+#                             ub = ub_ARCH, silent = TRUE)
+# print(H0.bridge)
+```
+
+
+# 5. Convergence analysis
+
+```{r}
+CPR.ggs <- ggs(as.mcmc(garch_model)) # convert to ggs object
+plot1 <- ggs_traceplot(CPR.ggs, family = "mu")
+plot2 <- ggs_traceplot(CPR.ggs, family = "alpha")
+plot3 <- ggs_traceplot(CPR.ggs, family = "beta")
+grid.arrange(plot1, plot2, plot3, ncol = 1, nrow = 3)
+```
+
+```{r}
+
+```
+
+
+# Inference
+
+# Forecasting
+
+```{r}
+tail(data$LogReturns)
+```
+
+
+# Comparative analysis with frequentist inference
+
+# Second model
 
 Denote by $I_{t-1}$ the information set observed up to time $t-1$, that is, $I_{t-1} = \{y_{t-1}, i > 0\}$. The general **Markov-switching GARCH** specification can then be expressed as:
 
@@ -440,4 +698,21 @@ GARCH model.
 
 We define the standardized innovations as $n_{k,t} := y_t/\sqrt{h_{z,t}} \overset{\mathrm{iid}}{\sim} D(0,1,\xi_k)$
 
+```{r}
+# Initialize a matrix to store the last 30 'y' values
+last_30_y <- matrix(NA, nrow = 30, ncol = length(arch_model$BUGSoutput$sims.list$y[[1]]))
+
+# Loop through the last 30 iterations and extract 'y'
+total_iterations <- length(arch_model$BUGSoutput$sims.list$y)
+for (i in 1:26) {
+  last_30_y[i, ] <- arch_model$BUGSoutput$sims.list$y[[total_iterations - 30 + i]]
+}
+
+new_data <- read.csv("BTC-USD2.csv")
+new_data$LogReturns <- c(NA, eval.log.returns(new_data$Adj.Close))
+
+N1 <- length(new_data$LogReturns)
+true_ret <- tail(new_data$LogReturns, 26)
+last_30_y_df <- data.frame(pred=last_30_y[1:26], true=true_ret)
+```
 

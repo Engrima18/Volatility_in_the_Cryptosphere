@@ -27,16 +27,16 @@ model
 "
 
 # Set up the data
-tstud_model_data <- list(N = N, y = y)
+fore_model_data <- list(N = N + 30, y = c(y, rep(NA,30)))
 
 # Choose the parameters to watch
-tstud_model_parameters <- c("omega", "alpha", "beta", "mu", "sigma")
+fore_model_parameters <- c("y", "sigma")
 
 # Run the model
-tstud_garch_model <- jags(
-  data = tstud_model_data,
-  parameters.to.save = tstud_model_parameters,
-  model.file = textConnection(tstud_model_code),
+fore_garch_model <- jags(
+  data = fore_model_data,
+  parameters.to.save = fore_model_parameters,
+  model.file = textConnection(fore_model_code),
   n.chains = 3, # Number of different starting positions
   n.iter = 5000, # Number of iterations
   n.burnin = 200, # Number of iterations to remove at start
