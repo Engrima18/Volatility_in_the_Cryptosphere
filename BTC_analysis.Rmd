@@ -78,7 +78,7 @@ head(subset(data, select = -Returns )) %>%gt() %>% tab_options(., table.width = 
 
 Of the kaggle data set we are solely interested in one of the features: the adjusted closing price of bitcoin (in terms of BTC/USD value).
 
-## 2.1. Returns rather than prices
+## 2.1. Returns and prices
 In the analysis of financial data, asset equity returns are typically the main variable of interest (rather than prices) There are at least two reasons for this:
 
 1. Returns are easier to interpret
@@ -132,7 +132,7 @@ ggarrange(plot_returns, plot_prices,
           ncol = 1, nrow = 2)
 ```
 
-## 2.2. Conditional variance and volatility
+## 2.2. Volatility and heteroscedasticity
 
 The conditional variance of a time series refers to the variability or dispersion of the data points in the series given the past observations or information. It is a measure of how much the values of the time series fluctuate around their conditional mean, taking into account the historical values of the series. In other words, it quantifies the uncertainty or risk associated with future values of the time series given the available information.
 
@@ -154,7 +154,7 @@ acf.plot(data$LogReturns)
 The inspection of the autcorrelograms suggests that:
 
 >- returns appear to have weak or no serial dependence
->- absolute and square returns appear to have strong serial dependence
+>- absolute (and so square) returns appear to have strong serial dependence
 
 In other words we know that the scale of returns changes in time and the (conditional) variance of the process is time varying. In order to capture **volatility clustering**, we need to introduce
 appropriate time series processes able to model this behavior!
@@ -163,8 +163,9 @@ We therefore infer that the volatility of the returns is directly symptomatic of
 
 **Heteroscedasticity** is the situation in which the variance of the residuals of a regression model is not the same across all values of the predicted variable. In other words, the variability of the residuals (i.e., error term) increases or decreases over the range of predictions.
 
+We therefore infer that the volatility of returns is directly symptomatic of a strong heteroscedasticity of the data. However, it does not make sense to proceed with the visualization of a linear model (lm) fictitious on our data and/or a hypothesis test (e.g., white test) involving the use of an lm. Later we will perform a test to confirm heteroscedasticity and choose an appropriate model (e.g., ARCH model).
 
-## 2.3. Decomposing timeseries
+## 2.3. Time series decomposition and stationarity 
 
 A given time series is thought to consist of three systematic components including level, trend, seasonality, and one non-systematic component called noise.
 
@@ -220,6 +221,38 @@ An extension of ARIMA models to handle seasonality is the SARIMA model.
 
 In this case, however, we find neither trend nor seasonality
 
+### 2.3.3 Stationarity
+
+At first glance (with the simple visualization of the observed levels) and based on the previously obtained results we can assume the **stationarity** of our time series. A stationary time series is one whose properties do not depend on the time at which the series is observed.15 Thus, time series with trends, or with seasonality, are not stationary — the trend and seasonality will affect the value of the time series at different times. In general, a stationary time series will have no predictable patterns in the long-term.
+
+the Dickey–Fuller test (Dickey & Fuller, 1979) tests the null hypothesis that a unit root is present in an autoregressive (AR) time series model. The alternative hypothesis is different depending on which version of the test is used, but is usually stationarity or trend-stationarity.
+
+Given that A simple AR model is given by:
+
+$$
+y_t = \rho y_{t-1} + u_t
+$$
+where:
+
+>- $y_t$ is the variable of interest (returns) at time $t$;
+>- $\rho$ is a coefficient;
+>- $u_t$ is an error term.
+
+Write the regression model as:
+
+$$
+\Delta y_t = (\rho -1) y_{t-1} + u_t = \delta y_{t-1} + u_t
+$$
+where $\Delta$ is the first difference operator and $\delta = \rho -1$. This model can be estimated, and testing for a unit root is equivalent to testing $\delta = 0$.
+
+The **augmented Dickey–Fuller (ADF) statistic** (augmented since it removes all the structural  - autocorrelation - effects in the time series), used in the test, is a negative number. The more negative it is, the stronger the rejection of the hypothesis that there is a unit root at some level of confidence.
+
+```{r results='markup'}
+adf.test(data$LogReturns[-1])
+```
+We got evidence against the the null hypothesis, thus we simply verified the stationarity of our data!
+
+This aspect is going to be a central point since the models we are going to use in order to well represent volatility often imply stationarity of the time series.
 
 ## 2.5. Searching for a prior
 
@@ -236,7 +269,7 @@ We note that fortunately for log-returns a normal distribution seems quite consi
 However, we are not satisfied with a simple visualization of this kind and continue the investigation with a **Kolmogorov-Smirnov test**, a _goodnes of fit_ test. The resulting p-value, however, indicates that the population does not actually exhibit normal distribution, rejecting the null hypothesis.
 
 ```{r results='markup'}
-ks.test(data$Returns[-1], "pnorm", mean = mean(data$LogReturns[-1]),
+ks.test(data$LogReturns[-1], "pnorm", mean = mean(data$LogReturns[-1]),
         sd = sd(data$Returns[-1]))
 ```
 We then disprove our initial assumption of a normal prior and via a _QQ plot_ the obvious differences between the current data and the normal distribution that we were previously unable to capture.
@@ -248,7 +281,9 @@ ggplot(data, aes(sample=LogReturns)) +
   labs(title = "QQ Plot for returns")
 ```
 
-We'll see later Gaussian GARCH models cannot quite capture the key properties of asset returns and to address this, researchers have explored alternative distributions to model asset returns.
+Traditionally, the errors (and so the returns) have been assumed to be Gaussian, however, it
+has been widely acknowledged that financial returns display fat tails and are not conditionally
+Gaussian. Gaussian GARCH models cannot quite capture the key properties of asset returns and to address this, researchers (Bollerslev (1987), He & Teräsvirta (1999) and Bai et al. (2003)) have explored alternative distributions to model asset returns.
 One approach is to assume that the returns are IID and follow a Student’s t-distribution (t-Student) instead of a normal distribution. The t-Student distribution allows for fatter tails, meaning it assigns higher probabilities to extreme events compared to the normal distribution. For example we'll try to use a GARCH model with a t-student prior distribution for returns:
 
 $$
@@ -261,6 +296,7 @@ $$
 
 ### 3.1.1. The ARCH model
 
+We veryfied in point _2.1 time series exhibiting conditional heteroscedasticity or autocorrelation in the squared series is said to have autoregressive conditional heteroscedastic -ARCH) Effects.
 
 The **ARCH (Autoregressive Conditional Heteroskedasticity)** model is a statistical time series model commonly used in econometrics and finance to capture volatility clustering in financial data. It was introduced by Robert F. Engle in the early 1980s as a way to model the changing volatility observed in financial returns over time. The ARCH model is particularly useful for analyzing financial time series data where the volatility, or the variation in the magnitude of returns, is not constant and can exhibit patterns of clustering or persistence.
 The **ARCH(1)** model is given by:
