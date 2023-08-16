@@ -261,7 +261,7 @@ We veryfied in point _2.2._ that the time series exhibits conditional heterosced
 
 The **Lagrange multiplier (LM) test** for ARCH is widely used as a specification test in univariate time series models. It is a test of no conditional heteroskedasticity against an ARCH model. The test is easy to compute from an auxiliary regression involving the squared least squares (LS) residuals. The LM statistic is asymptotically distributed as $\chi^2$ under the null hypothesis.
 
-```{r}
+```{r, results='markup'}
 Lm.test(data$LogReturns[-1])
 ```
 With this result we can claim with a large evidence that our time series is NOT homoscedastic!
@@ -302,30 +302,23 @@ $$
 y_t = \sigma_t z_t \sim t(d)
 $$
 
-# 3. First model
+# 3. Model selection
 
-## 3.1. ARCH vs GARCH
 
-### 3.1.1. The ARCH model
+## 3.1. The ARCH model
 
-The **ARCH (Autoregressive Conditional Heteroskedasticity)** model is a statistical time series model commonly used in econometrics and finance to capture volatility clustering in financial data. It was introduced by Robert F. Engle in the early 1980s as a way to model the changing volatility observed in financial returns over time. The ARCH model is particularly useful for analyzing financial time series data where the volatility, or the variation in the magnitude of returns, is not constant and can exhibit patterns of clustering or persistence.
+The **ARCH (Autoregressive Conditional Heteroskedasticity)** model (Engle, 1982) is a statistical time series model commonly used in econometrics and finance to capture volatility clustering in financial data. It was introduced by Robert F. Engle in the early 1980s as a way to model the changing volatility observed in financial returns over time. The ARCH model is particularly useful for analyzing financial time series data where the volatility, or the variation in the magnitude of returns, is not constant and can exhibit patterns of clustering or persistence.
 The **ARCH(1)** model is given by:
 
 $$
-y_t = \sqrt{\sigma^2_t} \cdot z_t
-$$
-$$
-z_t \sim D(0,1)
-$$
-
-where $D$ is a distribution with mean 0 and variance 1 and in our case $D(0,1) = N(0,1)$. This implies that $y_t = N(\mu, \sigma^2_t)$ and
-
-$$
-\sigma^2_t= \omega + \alpha y^2_{t-1}
+\begin{aligned}
+y_t &= \sqrt{\sigma^2_t} \cdot z_t  \nonumber \\
+\sigma^2_t &= \omega + \alpha y^2_{t-1}
+\end{aligned}
 $$
 
-where $w > 0, \beta > 0, \alpha+\beta < 1$ (in order to have
-stationarity).
+where $w > 0, \alpha \geq 0$ in order to have
+stationarity.
 
 This variables and parameters have a specific meaning in our model:
 
@@ -335,23 +328,55 @@ This variables and parameters have a specific meaning in our model:
 >- $\omega$ is the baseline volatility
 >- $\alpha$ represents the impact of past squared residuals on the conditional variance
 
-### 3.1.2. The GARCH model
+We then define our _hierarchical bayesian ARCH model_ selecting the correct set of distributions for the above parameters and variable. We use the following setup:
 
-The **GARCH (Generalized Autoregressive Conditional Heteroskedasticity)** model is an extension of the ARCH (Autoregressive Conditional Heteroskedasticity) model that further captures and models the time-varying volatility in financial and economic time series data. Introduced by Tim Bollerslev in the mid-1980s, the GARCH model addresses some of the limitations of the basic ARCH model by incorporating past values of the conditional variance itself into the volatility modeling process.
+$$
+\begin{aligned}
+z_t &\sim N(\mu, 1) \rightarrow y_t= \sigma_t z_t \sim N(\mu, \sigma_t^2)  \nonumber \\
+\mu &\sim N(0, 100^2) \nonumber \\
+\omega &\sim U(0, 10) \nonumber \\
+\alpha &\sim U(0, 1)
+\end{aligned}
+$$
+It follows the above model coded with JAGS.
+
+```{r include=TRUE}
+arch_model_code <- "
+model
+{
+  # Likelihood
+  for (t in 1:N) {
+    y[t] ~ dnorm(mu, tau[t])
+    tau[t] <- 1/pow(sigma[t], 2)
+  }
+  sigma[1] ~ dunif(0,10)
+  for(t in 2:N) {
+    sigma[t] <- sqrt(omega + alpha * pow(y[t-1] - mu, 2))
+  }
+
+  # Priors
+  mu ~ dnorm(0.0, 0.01)
+  omega ~ dunif(0, 10)
+  alpha ~ dunif(0, 1)
+}
+```
+
+
+
+
+### 3.1. The GARCH model
+
+The **GARCH (Generalized Autoregressive Conditional Heteroskedasticity)** model (Bollerslev, 1986) is an extension of the ARCH (Autoregressive Conditional Heteroskedasticity) model that further captures and models the time-varying volatility in financial and economic time series data. Introduced by Tim Bollerslev in the mid-1980s, the GARCH model addresses some of the limitations of the basic ARCH model by incorporating past values of the conditional variance itself into the volatility modeling process.
 
 Mathematically, a **GARCH(1,1,)** model is given by the following structure:
-$$
-y_t = \sqrt{\sigma^2_t} \cdot z_t
-$$
-
 
 $$
-z_t \sim D(0,1)
+\begin{aligned}
+y_t &= \sqrt{\sigma^2_t} \cdot z_t  \nonumber \\
+\sigma^2_t &= \omega + \alpha y^2_{t-1} + \beta \sigma_{t-1}^2
+\end{aligned}
 $$
 
-$$
-\sigma^2_t = \omega + \alpha\epsilon^2_{t-1} + \beta\sigma^2_{t-1}
-$$
 As can be seen, the only difference from the previous model is the dependence of volatility on past volatility values (conditional variance) and the introduction of a new $\beta$ parameter to govern this relationship.
 
 GARCH (Generalized Autoregressive Conditional Heteroskedasticity) and ARCH (Autoregressive Conditional Heteroskedasticity) are both models used to analyze and forecast volatility in financial time series data, such as the volatility of Bitcoin prices. The preference for GARCH over ARCH for modeling Bitcoin volatility is based on several factors:
@@ -366,6 +391,42 @@ GARCH (Generalized Autoregressive Conditional Heteroskedasticity) and ARCH (Auto
 
 5. Statistical Significance and Model Selection: GARCH models often provide more accurate parameter estimates and better model fit, as determined by statistical tests and criteria. This helps in selecting a more appropriate and reliable model for analyzing Bitcoin volatility.
 
+We then define our _hierarchical bayesian ARCH model_ selecting the correct set of distributions for the above parameters and variable. We use the following setup:
+
+$$
+\begin{aligned}
+z_t &\sim N(\mu, 1) \rightarrow y_t= \sigma_t z_t \sim N(\mu, \sigma_t^2)  \nonumber \\
+\mu &\sim N(0, 100^2) \nonumber \\
+\omega &\sim U(0, 10) \nonumber \\
+\alpha &\sim U(0, 1) \nonumber \\
+\beta &\sim U(0, 1)
+\end{aligned}
+$$
+
+It follows the above model coded with JAGS.
+
+```{r include=TRUE}
+garch_model_code <- "
+model
+{
+  # Likelihood
+  for (t in 1:N) {
+    y[t] ~ dnorm(mu, tau[t])
+    tau[t] <- 1/pow(sigma[t], 2)
+  }
+  sigma[1] ~ dunif(0,10)
+  for(t in 2:N) {
+    sigma[t] <- sqrt(omega + alpha * pow(y[t-1] - mu, 2) + beta * pow(sigma[t-1], 2))
+  }
+
+  # Priors
+  mu ~ dnorm(0.0, 0.01)
+  omega ~ dunif(0, 10)
+  alpha ~ dunif(0, 1)
+  beta ~ dunif(0, 1)
+}
+"
+```
 
 # 4. Second model
 
