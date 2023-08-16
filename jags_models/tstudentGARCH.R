@@ -38,7 +38,7 @@ tstud_garch_model <- jags(
   parameters.to.save = model_parameters,
   model.file = textConnection(model_code),
   n.chains = 3, # Number of different starting positions
-  n.iter = 1000, # Number of iterations
+  n.iter = 5000, # Number of iterations
   n.burnin = 200, # Number of iterations to remove at start
   n.thin = 2
 )

@@ -37,7 +37,7 @@ arch_model <- jags(
   parameters.to.save = arch_model_parameters,
   model.file = textConnection(arch_model_code),
   n.chains = 3, # Number of different starting positions
-  n.iter = 1000, # Number of iterations
+  n.iter = 5000, # Number of iterations
   n.burnin = 200, # Number of iterations to remove at start
   n.thin = 2
 )
