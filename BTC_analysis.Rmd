@@ -61,7 +61,7 @@ library(bbsBayes)
 library(bayesplot)
 
 # to avoid time wasting
-load("BTC.RData")
+load(".RData")
 ```
 
 ```{r eval=FALSE}

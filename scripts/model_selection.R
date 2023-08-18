@@ -1,4 +1,4 @@
-load("BTC.RData")
+load(".RData")
 
 
 # inferencial findings ----------------------------------------------------
