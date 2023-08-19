@@ -90,6 +90,10 @@ Bitcoin is the progenitor of cryptocurrencies, and despite its enormous potentia
 
 In this project we therefore try to define models that can "capture" the volatility typical of this asset. Through the use of different econometric models in a Bayesian setup, we will then try to build useful tools in decision analysis, risk management and in general try to infer the main critical factors when investing on assets of this type.
 
+\
+
+![](imgs/bitcoin.jpeg){height=600}
+
 
 \newpage
 
@@ -436,10 +440,8 @@ We can then begin to analyze the distribution of our data. Let's start with a si
 
 \
 
-```{r, figures-side, fig.show="hold", out.width="50%"}
-fit_distros(data$Adj.Close)
-fit_distros(data$LogReturns[-1], flag = FALSE)
-```
+![](imgs/fit_distros.png){height="600" width="600" align="center}
+
 
 We note that fortunately for log-returns a normal distribution seems quite consistent for a possible prior assumption in Bayesian framework.
 
@@ -664,11 +666,11 @@ We remedied the problem by doubling the number of iterations of the last model, 
 
 # 5. Convergence analysis
 
-First check for the absence of any pattern or trend in the traceplot to avert the non-convergence of some parameter by visual analysis.
+We check for the absence of any pattern or trend in the traceplot to avert the non-convergence of some parameter by visual analysis.
 
 \
 
-```{r}
+```{r fig.height=7.4}
 grid.arrange(trace1, trace2, trace3, trace4, ncol = 1, nrow = 4)
 ```
 
@@ -686,6 +688,8 @@ Therefore, the models are quite reliable and allow to understand and predict pos
 volatility.plot(tstud_garch_model, garch_model, y)
 
 ```
+
+\
 
 The two models look very similar but looking closely at the plots one can perceive more subtlety in the case of Student's t prior. Probably the Gaussian model detects more oscillation (more noise) and is less able to predict extreme values.
 
@@ -707,6 +711,8 @@ df <- na.forecast(fore_garch_model, new_data, 20)
 
 ```
 
+\
+
 ```{r}
 
 true_plot <- ggplot(df, aes(x = Date)) +
@@ -727,6 +733,8 @@ pred_plot <- ggplot(df, aes(x = Date)) +
 ggarrange(true_plot, pred_plot,
           ncol = 1, nrow = 2)
 ```
+\
+
 Clearly, the model does not perform well in direct forecasting of returns, but it does manage to forecast the general trend with some success because of correct volatility forecasting. 
 
 Our GARCH model is therefore able to determine when price fluctuations might occur.
@@ -735,14 +743,30 @@ Our GARCH model is therefore able to determine when price fluctuations might occ
 
 # 8. Comparative analysis with frequentist approach
 
-```{r}
+As for the inference and prediction, the Bayesian approach is especially well-suited for GARCH models and provides some advantages compared to classical estimation techniques, as outlined by Ardia & Hoogerheide (2010).
+
+1. The positivity constraints on the parameters to ensure positive variance, may encumber some optimization procedures. In the Bayesian setting, constraints on the model parameters can be incorporated via priors.
+
+2. In most of the cases we are more interested not in the model parameters directly,
+but in some non-linear functions of them. In the maximum likelihood (ML) setting, it is quite troublesome to perform inference on such quantities, while in the Bayesian setting it is usually straightforward to obtain the posterior distribution of any non-linear function of the model parameters. 
+
+3. In the classical approach, models are usually compared by any other means than the likelihood. In the Bayesian setting, marginal likelihoods and
+Bayes factors allow for consistent comparison of non-nested models while incorporating Occam’s razor for parsimony.
+
+4. Bayesian estimation provides reliable results even for finite
+samples. 
+
+5. Hall & Yao (2003) add that the ML approach presents some limitations when the errors are heavy tailed (as in our case), also the convergence rate is slow and the estimators may not be asymptotically Gaussian.
+
+```{r results='markup'}
 # Specify the model
 mod_specify= ugarchspec(mean.model=list(armaOrder=c(0,0)),variance.model=list(model='sGARCH',garchOrder=c(1,1)),distribution.model = 'std')
 fit=ugarchfit(data=data$LogReturns[-1], spec = mod_specify, out_sample=20)
 # params
-parameters <- fit@fit$coef[c("mu","omega","alpha1","beta1")]
-#print(fit)
-as.data.frame(parameters)
+Estimate <- fit@fit$coef[c("mu","omega","alpha1","beta1")]
+
+data.frame(Parameter = setdiff(garch_model_parameters, "sigma")) %>% mutate(as.data.frame(Estimate)) %>% gt() %>% tab_options(., table.width = 300) %>%
+  tab_header(title = "Frequentist framework results")
 ```
 
 \newpage
