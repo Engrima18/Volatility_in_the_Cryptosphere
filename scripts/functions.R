@@ -113,8 +113,9 @@ acf.plot <- function(ret){
 
 tg <- ggs(as.mcmc(tstud_garch_model)) # convert to ggs object
 trace1 <- ggs_traceplot(tg, family = "mu")
-trace2 <- ggs_traceplot(tg, family = "alpha")
-trace3 <- ggs_traceplot(tg, family = "beta")
+trace2 <- ggs_traceplot(tg, family = "omega")
+trace3 <- ggs_traceplot(tg, family = "alpha")
+trace4 <- ggs_traceplot(tg, family = "beta")
 
 
 # Volatility forecasting --------------------------------------------------
@@ -166,6 +167,28 @@ mse <- function(true, pred){
   return(mean((true-pred)^2))
 }
 
+
+# NA-forecasting ----------------------------------------------------------
+
+na.forecast <- function(model, data, n){
+  # Initialize a matrix to store the last n 'y' values
+  preds <- rep(NA, n)
+  
+  # Loop through the last 30 iterations and extract 'y'
+  total_iterations <- length(model$BUGSoutput$sims.list$y)
+  for (i in 1:n) {
+    preds[i] <- model$BUGSoutput$sims.list$y[[total_iterations - n + i]]
+  }
+  
+  data$LogReturns <- c(NA, eval.log.returns(data$Adj.Close))
+  
+  N1 <- length(data$LogReturns)
+  true_ret <- head(tail(data$LogReturns, 30),20)
+  dates <- as.Date(head(tail(data$Date, 30),20))
+  
+  df <- data.frame(pred=preds, true=true_ret, Date=dates)
+  return(df)
+}
 
 # marginal likelihood comparison -----------------------------------------
 
