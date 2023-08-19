@@ -87,7 +87,7 @@ source("forecasting/GARCH_NAforecast.R")
 
 Bitcoin is the progenitor of cryptocurrencies, and despite its enormous potential, it has shown a number of issues including the lack of a regulated market and high price volatility (like many of the cryptos). 
 
-In this project we therefore try to define models that can "capture" the volatility typical of this asset. Through the use of different econometric models in a Bayesian setup we will then try to build useful tools in decision analysis, risk management and in general try to infer the main critical factors when investing on assets of this type.
+In this project we therefore try to define models that can "capture" the volatility typical of this asset. Through the use of different econometric models in a Bayesian setup, we will then try to build useful tools in decision analysis, risk management and in general try to infer the main critical factors when investing on assets of this type.
 
 
 \newpage
@@ -101,10 +101,10 @@ The [Yahoo Finance Bitcoin Historical Data](https://www.kaggle.com/datasets/arsl
 head(subset(data, select = -Returns )) %>%gt() %>% tab_options(., table.width = 300)
 ```
 
-Of the kaggle data set we are solely interested in one of the features: the adjusted closing price of bitcoin (in terms of BTC/USD value).
+Of the kaggle data set we are solely interested in one of the features: the adjusted closing price of bitcoin (in terms of BTC/USD value), from which we also derive the "LogREturns" feature.
 
 ## 2.1. Returns and prices
-In the analysis of financial data, asset equity returns are typically the main variable of interest (rather than prices) There are at least two reasons for this:
+In the analysis of financial data, asset equity returns are typically the main variable of interest (rather than prices). There are at least two reasons for this:
 
 1. Returns are easier to interpret
 2. Returns have statistical properties which are easier to handle (e.g. stationarity)
@@ -133,7 +133,7 @@ $$
 
 Below is a graphical comparison of prices and returns: note some evidence of leverage as descending prices imply higher volatility of returns.
 
-Volatility we will therefore see will be a key issue in choosing our models and will influence our inferential results.
+Volatility, we will therefore see, will be a key issue in choosing our models and will influence our inferential results.
 
 \
 
@@ -157,15 +157,20 @@ ggarrange(plot_returns, plot_prices,
           ncol = 1, nrow = 2)
 ```
 
+\
+
 ## 2.2. Volatility and heteroscedasticity
 
-The conditional variance of a time series refers to the variability or dispersion of the data points in the series given the past observations or information. It is a measure of how much the values of the time series fluctuate around their conditional mean, taking into account the historical values of the series. In other words, it quantifies the uncertainty or risk associated with future values of the time series given the available information.
+The **conditional variance** of a time series refers to the variability or dispersion of the data points in the series given the past observations or information. It is a measure of how much the values of the time series fluctuate around their conditional mean, taking into account the historical values of the series. In other words, it quantifies the uncertainty or risk associated with future values of the time series given the available information.
 
-Mathematically, if $Y_t$ represents the value of the time series at time $t$ and the conditional variance of $Y_t$ given the past observations up to time $t-1$, then it can be expressed as:
+\newpage
+
+Mathematically, if $Y_t$ represents the value of the time series at time $t$, the conditional variance of $Y_t$ given the past observations up to time $t-1$ can be expressed as:
 
 $$
 \sigma_t^2 = Var(Y_t|Y_{t-1},Y_{t-2},..., Y_1)
 $$
+
 Volatility, on the other hand, is a broader concept that generally refers to the degree of variation or dispersion of a financial asset's price (or return) over time. It measures the magnitude of price fluctuations and is often used to assess the risk or uncertainty associated with an investment. In the context of financial markets, volatility is often calculated using various statistical measures, such as standard deviation or variance, to quantify how much an asset's price tends to deviate from its average.
 
 
@@ -176,13 +181,18 @@ Volatility, on the other hand, is a broader concept that generally refers to the
 # Plot ACF for Returns
 acf.plot(data$LogReturns)
 ```
+\
+
 The inspection of the autcorrelograms suggests that:
 
->- returns appear to have weak or no serial dependence
->- absolute (and so square) returns appear to have strong serial dependence
+1. returns appear to have weak or no serial dependence.
+2. absolute (and so square) returns appear to have strong serial dependence
 
-In other words we know that the scale of returns changes in time and the (conditional) variance of the process is time varying. In order to capture **volatility clustering**, we need to introduce
-appropriate time series processes able to model this behavior!
+The first finding suggests that the choice of a possible model should fall on types such as **first-order Auto Regression (AR(1))** or derivatives given the high ACF at lag=0, and low ACF for the rest of the lags.
+
+The second observation, on the other hand suggests that the scale of returns changes in time and the (conditional) variance of the process is time varying. In order to capture **volatility clustering**, we need to introduce appropriate time series processes able to model this behavior!
+
+The low ACF values at subsequent lags might suggest that the process generating the data is highly dynamic and subject to rapid changes. The lack of correlation at longer lags could indicate that the influence of past values on the current value diminishes rapidly, possibly due to external factors or interventions.
 
 We therefore infer that the volatility of the returns is directly symptomatic of a strong heteroscedasticity of the data.
 
@@ -241,20 +251,20 @@ In the following sections we are going to dive into the analysis of the last 2 r
 ### 2.3.2. Trend and seasonality
 
 The **Trend** represents the long-term change in the level of a time series. This change can be either upward (increase in level) or downward (decrease in level). If the change is systematic in one direction, then the trend is monotonic.
-ARIMA-type models for instance are suitable in case of data with an obvious trend, but cannot handle seasonality.
+_ARIMA-type models_ for instance are suitable in case of data with an obvious trend, but cannot handle seasonality.
 
 **Seasonality** refers to periodic fluctuations in certain business areas and cycles that occur regularly based on a particular season. A season may refer to a calendar season such as summer or winter, or it may refer to a commercial season such as the holiday season. 
-An extension of ARIMA models to handle seasonality is the SARIMA model.
+An extension of ARIMA models to handle seasonality is the _SARIMA model_.
 
 In this case, however, we find neither trend nor seasonality
 
 ### 2.3.3 Stationarity
 
-At first glance (with the simple visualization of the observed levels) and based on the previously obtained results we can assume the **stationarity** of our time series. A stationary time series is one whose properties do not depend on the time at which the series is observed.15 Thus, time series with trends, or with seasonality, are not stationary — the trend and seasonality will affect the value of the time series at different times. In general, a stationary time series will have no predictable patterns in the long-term.
+At first glance (with the simple visualization of the observed levels) and based on the previously obtained results we can assume the **stationarity** of our time series. A stationary time series is one whose properties do not depend on the time at which the series is observed. Thus, time series with trends, or with seasonality, are not stationary — the trend and seasonality will affect the value of the time series at different times. In general, a stationary time series will have no predictable patterns in the long-term.
 
-the Dickey–Fuller test (Dickey & Fuller, 1979) tests the null hypothesis that a unit root is present in an autoregressive (AR) time series model. The alternative hypothesis is different depending on which version of the test is used, but is usually stationarity or trend-stationarity.
+The **Dickey–Fuller test** (Dickey & Fuller, 1979) tests the null hypothesis that a unit root is present in an autoregressive (AR) time series model. The alternative hypothesis is different depending on which version of the test is used, but is usually stationarity or trend-stationarity.
 
-Given that A simple AR model is given by:
+Given that A simple **AR model** is given by:
 
 $$
 y_t = \rho y_{t-1} + u_t
@@ -383,7 +393,7 @@ $$
 
 As can be seen, the only difference from the previous model is the dependence of volatility on past volatility values (conditional variance) and the introduction of a new $\beta$ parameter to govern this relationship.
 
-GARCH (Generalized Autoregressive Conditional Heteroskedasticity) and ARCH (Autoregressive Conditional Heteroskedasticity) are both models used to analyze and forecast volatility in financial time series data, such as the volatility of Bitcoin prices. The preference for GARCH over ARCH for modeling Bitcoin volatility is based on several factors:
+GARCH and ARCH are both models used to analyze and forecast volatility in financial time series data, such as the volatility of Bitcoin prices. The preference for GARCH over ARCH for modeling Bitcoin volatility is based on several factors:
 
 1. Flexibility and Improved Modeling: GARCH is an extension of the ARCH model that allows for more complex and flexible modeling of volatility dynamics. GARCH models incorporate both lagged conditional variances (as in ARCH) and lagged conditional variances of the squared past returns. This added flexibility often helps capture more intricate volatility patterns observed in financial data like Bitcoin prices.
 
@@ -437,6 +447,7 @@ model
 
 We can then begin to analyze the distribution of our data. Let's start with a simple visualization of the distribution (histogram) of our data and then try to fit some possible density functions by selecting a few by intuition and using MLE for parameters.
 
+\
 
 ```{r, figures-side, fig.show="hold", out.width="50%"}
 fit_distros(data$Adj.Close)
@@ -447,11 +458,15 @@ We note that fortunately for log-returns a normal distribution seems quite consi
 
 However, we are not satisfied with a simple visualization of this kind and continue the investigation with a **Kolmogorov-Smirnov test**, a _goodnes of fit_ test. The resulting p-value, however, indicates that the population does not actually exhibit normal distribution, rejecting the null hypothesis.
 
+\newpage
+
 ```{r results='markup'}
 ks.test(data$LogReturns[-1], "pnorm", mean = mean(data$LogReturns[-1]),
         sd = sd(data$Returns[-1]))
 ```
 We then disprove our initial assumption of a normal prior and via a _QQ plot_ the obvious differences between the current data and the normal distribution that we were previously unable to capture.
+
+\
 
 ```{r}
 ggplot(data, aes(sample=LogReturns)) +
@@ -481,6 +496,8 @@ where:
 
 >- $\delta = \mu \cdot \sigma^{- \frac{1}{2}}_t$ is the non-centrality parameter
 >- $\nu = 8$ represents the degrees of freedom and we set it equal to a constant according to a study provided in ["Notes on the econometrics of asset allocation and risk measurement"](https://didattica.unibocconi.it/mypage/index.php?IdUte=48917&idr=3008) (Favero)
+
+\
 
 ```{r}
 ggplot(data, aes(sample = LogReturns)) +
