@@ -242,7 +242,7 @@ In the following sections we are going to dive into the analysis of the last 2 r
 ### 2.3.2. Trend and seasonality
 
 The **Trend** represents the long-term change in the level of a time series. This change can be either upward (increase in level) or downward (decrease in level). If the change is systematic in one direction, then the trend is monotonic.
-_ARIMA-type models_ for instance are suitable in case of data with an obvious trend, but cannot handle seasonality.
+_ARIMA-type models_ [@ARIMA] for instance are suitable in case of data with an obvious trend, but cannot handle seasonality.
 
 **Seasonality** refers to periodic fluctuations in certain business areas and cycles that occur regularly based on a particular season. A season may refer to a calendar season such as summer or winter, or it may refer to a commercial season such as the holiday season. 
 An extension of ARIMA models to handle seasonality is the _SARIMA model_.
@@ -253,7 +253,7 @@ In this case, however, we find neither trend nor seasonality
 
 At first glance (with the simple visualization of the observed levels) and based on the previously obtained results we can assume the **stationarity** of our time series. A stationary time series is one whose properties do not depend on the time at which the series is observed. Thus, time series with trends, or with seasonality, are not stationary — the trend and seasonality will affect the value of the time series at different times. In general, a stationary time series will have no predictable patterns in the long-term.
 
-The **Dickey–Fuller test** (Dickey & Fuller, 1979) tests the null hypothesis that a unit root is present in an autoregressive (AR) time series model. The alternative hypothesis is different depending on which version of the test is used, but is usually stationarity or trend-stationarity.
+The **Dickey–Fuller test** [@stationarity] tests the null hypothesis that a unit root is present in an autoregressive (AR) time series model. The alternative hypothesis is different depending on which version of the test is used, but is usually stationarity or trend-stationarity.
 
 Given that A simple **AR model** is given by:
 
@@ -288,7 +288,7 @@ This aspect is going to be a central point since the models we are going to use 
 
 We veryfied in point _2.2._ that the time series exhibits conditional heteroscedasticity through the study of the autocorrelation in the absolute/squared series. Now we formally check for the **autoregressive conditional heteroscedastic (ARCH) effects**.
 
-The **Lagrange multiplier (LM) test** for ARCH is widely used as a specification test in univariate time series models. It is a test of no conditional heteroskedasticity against an ARCH model. The test is easy to compute from an auxiliary regression involving the squared least squares (LS) residuals. The LM statistic is asymptotically distributed as $\chi^2$ under the null hypothesis.
+The **Lagrange multiplier (LM) test** [@LMtest] for ARCH is widely used as a specification test in univariate time series models. It is a test of no conditional heteroskedasticity against an ARCH model. The test is easy to compute from an auxiliary regression involving the squared least squares (LS) residuals. The LM statistic is asymptotically distributed as $\chi^2$ under the null hypothesis.
 
 ```{r, results='markup'}
 Lm.test(data$LogReturns[-1])
@@ -310,7 +310,7 @@ Below we will report three models typically used for time series analysis simila
 
 ## 3.1. The ARCH model
 
-The **ARCH (Autoregressive Conditional Heteroskedasticity)** model (Engle, 1982) is a statistical time series model commonly used in econometrics and finance to capture volatility clustering in financial data. It was introduced by Robert F. Engle in the early 1980s as a way to model the changing volatility observed in financial returns over time. The ARCH model is particularly useful for analyzing financial time series data where the volatility, or the variation in the magnitude of returns, is not constant and can exhibit patterns of clustering or persistence.
+The **ARCH (Autoregressive Conditional Heteroskedasticity)** model [@ARCH] is a statistical time series model commonly used in econometrics and finance to capture volatility clustering in financial data. It was introduced by Robert F. Engle in the early 1980s as a way to model the changing volatility observed in financial returns over time. The ARCH model is particularly useful for analyzing financial time series data where the volatility, or the variation in the magnitude of returns, is not constant and can exhibit patterns of clustering or persistence.
 
 The **ARCH(1)** model is given by:
 
@@ -342,7 +342,7 @@ z_t &\sim N(\mu, 1) \rightarrow y_t= \sigma_t z_t \sim N(\mu, \sigma_t^2)  \nonu
 \alpha &\sim U(0, 1)
 \end{aligned}
 $$
-It follows the above model coded with JAGS.
+It follows the above model coded with JAGS [@Plummer2017].
 
 ```{r echo=TRUE}
 arch_model_code <- "
@@ -371,7 +371,7 @@ model
 
 ## 3.2. The Gaussian GARCH model
 
-The **GARCH (Generalized Autoregressive Conditional Heteroskedasticity)** model (Bollerslev, 1986) is an extension of the ARCH (Autoregressive Conditional Heteroskedasticity) model that further captures and models the time-varying volatility in financial and economic time series data. Introduced by Tim Bollerslev in the mid-1980s, the GARCH model addresses some of the limitations of the basic ARCH model by incorporating past values of the conditional variance itself into the volatility modeling process.
+The **GARCH (Generalized Autoregressive Conditional Heteroskedasticity)** model [@GARCH] is an extension of the ARCH (Autoregressive Conditional Heteroskedasticity) model that further captures and models the time-varying volatility in financial and economic time series data. Introduced by Tim Bollerslev in the mid-1980s, the GARCH model addresses some of the limitations of the basic ARCH model by incorporating past values of the conditional variance itself into the volatility modeling process.
 
 Mathematically, a **GARCH(1,1,)** model is given by the following structure:
 
@@ -466,8 +466,8 @@ ggplot(data, aes(sample=LogReturns)) +
 
 Traditionally, the errors (and so the returns) have been assumed to be Gaussian, however, it
 has been widely acknowledged that financial returns display fat tails and are not conditionally
-Gaussian. Gaussian GARCH models cannot quite capture the key properties of asset returns and to address this, researchers (Bollerslev (1987), He & Teräsvirta (1999) and Bai et al. (2003)) have explored alternative distributions to model asset returns.
-One approach is to assume that the returns are IID and follow a Student’s t-distribution (t-Student) instead of a normal distribution. The t-Student distribution allows for fatter tails, meaning it assigns higher probabilities to extreme events compared to the normal distribution.
+Gaussian. Gaussian GARCH models cannot quite capture the key properties of asset returns and to address this, researchers [@Bollerslev; @Changli; @Bai] have explored alternative distributions to model asset returns.
+One approach is to assume that the returns are IID and follow a Student’s t-distribution (t-Student) [@tstud] instead of a normal distribution. The t-Student distribution allows for fatter tails, meaning it assigns higher probabilities to extreme events compared to the normal distribution.
 
 \newpage
 
@@ -613,7 +613,7 @@ We note that the parameter estimates do not differ much in the two models, but i
 
 ## 4.2. Deviance Information Criterion (DIC)
 
-The **Deviance Information Criterion - DIC** (Spiegelhalter et al., 2002) was introduced as a measure of model comparision and adequancy. For the model $m$ and its paramteres $\theta_m$ it is given by:
+The **Deviance Information Criterion - DIC** [@DIC] was introduced as a measure of model comparision and adequancy. For the model $m$ and its paramteres $\theta_m$ it is given by:
 
 $$
 DIC(m) = 2 \overline{D(\theta_m,m)} - D( \overline{\theta_m}, m) = D(\overline{\theta_m}, m) + 2p_m
@@ -666,7 +666,7 @@ We remedied the problem by doubling the number of iterations of the last model, 
 
 # 5. Convergence analysis
 
-We check for the absence of any pattern or trend in the traceplot to avert the non-convergence of some parameter by visual analysis.
+As explained in the Peter Hoffman book [@Hoff2009] We check for the absence of any pattern or trend in the traceplot to exclude the non-convergence of some parameter by visual analysis.
 
 \
 
@@ -743,7 +743,7 @@ Our GARCH model is therefore able to determine when price fluctuations might occ
 
 # 8. Comparative analysis with frequentist approach
 
-As for the inference and prediction, the Bayesian approach is especially well-suited for GARCH models and provides some advantages compared to classical estimation techniques, as outlined by Ardia & Hoogerheide (2010).
+As for the inference and prediction, the Bayesian approach is especially well-suited for GARCH models [@freqvsbayes] and provides some advantages compared to classical estimation techniques, as outlined by Ardia & Hoogerheide (2010).
 
 1. The positivity constraints on the parameters to ensure positive variance, may encumber some optimization procedures. In the Bayesian setting, constraints on the model parameters can be incorporated via priors.
 
@@ -773,6 +773,10 @@ data.frame(Parameter = setdiff(garch_model_parameters, "sigma")) %>% mutate(as.d
 
 # 9. Further improvements
 
+we propose additional improvements that could inspire far more in-depth studies than those considered for this specific university project. Such milgiories see the use of more complicated models and would likely require more complex MCMC-based sampling software than JAGS.
+
+## 9.1. M-S GARCH
+
 Denote by $I_{t-1}$ the information set observed up to time $t-1$, that is, $I_{t-1} = \{y_{t-1}, i > 0\}$. The general **Markov-switching GARCH** specification can then be expressed as:
 
 $$
@@ -783,5 +787,11 @@ GARCH model.
 
 We define the standardized innovations as $n_{k,t} := y_t/\sqrt{h_{z,t}} \overset{\mathrm{iid}}{\sim} D(0,1,\xi_k)$
 
+
+## 9.2. Multivariate GARCH 
+
+
+
+# References
 
 
