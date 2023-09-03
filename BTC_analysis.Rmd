@@ -19,6 +19,7 @@ date: |
 output: 
   pdf_document: default
   html_document: default
+  fig_align: "center"
 toc: no
 number_sections: true
 bibliography: bibliography.bib
@@ -88,11 +89,13 @@ source("forecasting/GARCH_NAforecast.R")
 
 Bitcoin is the progenitor of cryptocurrencies, and despite its enormous potential, it has shown a number of issues including the lack of a regulated market and high price volatility (like many of the cryptos). 
 
+Cryptocurrencies are indeed considered high-risk financial assets and it is virtually impossible to predict their value because it is tied (like so many other products) to so-called market sentiment, daily news and a myriad of uncontrollable factors. We will try to study this great variability through analysis of BTC volatility and note that there are no recurring patterns or trends. 
+
 In this project we therefore try to define models that can "capture" the volatility typical of this asset. Through the use of different econometric models in a Bayesian setup, we will then try to build useful tools in decision analysis, risk management and in general try to infer the main critical factors when investing on assets of this type.
 
 \
 
-![](imgs/bitcoin.jpeg){height=600}
+![](imgs/bitcoin.jpeg){height=500}
 
 
 \newpage
@@ -769,28 +772,45 @@ data.frame(Parameter = setdiff(garch_model_parameters, "sigma")) %>% mutate(as.d
   tab_header(title = "Frequentist framework results")
 ```
 
+\
+
+We can see that the frequentist approach allows obtaining results consistent with those reported above for Bayesian models, but differs greatly in estimating the $\mu$ centrality parameter and the parameter affecting the time dependence of past conditional variance $\sigma$.
+
 \newpage
 
 # 9. Further improvements
 
-we propose additional improvements that could inspire far more in-depth studies than those considered for this specific university project. Such milgiories see the use of more complicated models and would likely require more complex MCMC-based sampling software than JAGS.
+we propose additional improvements that could inspire far more in-depth studies than those considered for this specific university project. Such improvements see the use of more complicated models and would likely require more complex MCMC-based sampling software than JAGS.
 
-## 9.1. M-S GARCH
+## 9.1. MS-GARCH
 
-Denote by $I_{t-1}$ the information set observed up to time $t-1$, that is, $I_{t-1} = \{y_{t-1}, i > 0\}$. The general **Markov-switching GARCH** specification can then be expressed as:
+The idea is to estimate a model that permits regime switching in the parameters as suggested by @ARDIA2019266. We call it a **Markov-switching GARCH** (MS-GARCH) model [@msgarch] . It is a generalization
+of the GARCH model and permits a different persistence in the conditional variance of each
+regime. Thus, the conditional variance in each regime accommodates volatility clustering,
+nesting the GARCH model as special case.
+
+Let $\{ s_t \}$ be an __ergodic Markov Chain__ of a finite set of states $S = \{ 1, ..., n \}$, with transition probabilities $\nu_{ij} = P(s_t=i|s_{t-1} = j)$ and invariant probability measure $\pi_i$, The MS-GARCH is given by:
 
 $$
-y_t|(s_t=k,I_{t-1}) \sim D(0, h_{k,t, \xi_k})
+\begin{aligned}
+y_t &= \mu_{s_t} + \sqrt{\sigma^2_t} \cdot z_t  \nonumber \\
+\sigma^2_t &= \omega_{s_t} + \alpha_{s_t} \epsilon^2_{t-1} + \beta_{s_t} \sigma^2_{t-1}
+\end{aligned}
 $$
-where $D(0, h_{k,t, \xi_k})$ $D(0, h_{k,t,\xi_k})$ is a continuous distribution with zero mean, time-varying variance $h_{k,t,\xi_k}$ and additional shape parameters gathered in the vector $\xi_k$. The integer-valued stochastic variable $s_t$, defined on the discrete space $\{1,...,K\}$, characterizes the Markov-switching
-GARCH model. 
 
-We define the standardized innovations as $n_{k,t} := y_t/\sqrt{h_{z,t}} \overset{\mathrm{iid}}{\sim} D(0,1,\xi_k)$
+where $\omega_{s_t} > 0$, $\alpha_{s_t} \geq 0$, $\beta_{s_t} \geq 0$ for $s_t \in \{ 1, 2, .., n \}$ and $\epsilon_t = y_t - \mu_{s_t}$
 
+It has been studied in the articles reported above that a model based on two stationary regimes achieved the best performance for modeling the volatility of Bitcoin.
 
 ## 9.2. Multivariate GARCH 
 
+**Volume** is the amount of an asset or security that changes hands over some period of time, often over the course of a trading day. For instance, a stock's trading volume refers to the number of shares traded between its daily open and close.
 
+Many studies have confirmed how much market volume can be related (correlated) to fluctuations in product prices or stock values. 
+
+Thus by including more information such as volume itself, any multivariate declination of GARCH would likely be able to achieve better volatility predictability performance [@volumes].
+
+\newpage
 
 # References
 
