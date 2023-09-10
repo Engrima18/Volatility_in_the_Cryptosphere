@@ -61,6 +61,7 @@ library(bridgesampling)
 library(bbsBayes)
 library(bayesplot)
 library(rugarch)
+library(coda)
 
 # to avoid time wasting
 load(".RData")
@@ -91,7 +92,9 @@ Bitcoin is the progenitor of cryptocurrencies, and despite its enormous potentia
 
 Cryptocurrencies are indeed considered high-risk financial assets and it is virtually impossible to predict their value because it is tied (like so many other products) to so-called market sentiment, daily news and a myriad of uncontrollable factors. We will try to study this great variability through analysis of BTC volatility and note that there are no recurring patterns or trends. 
 
-In this project we therefore try to define models that can "capture" the volatility typical of this asset. Through the use of different econometric models in a Bayesian setup, we will then try to build useful tools in decision analysis, risk management and in general try to infer the main critical factors when investing on assets of this type.
+This project addresses the study and construction of econometric models in Bayesian framework that can capture the volatility of bitcoin. In fact, we start with a qualitative analysis of the time series in question and the subsequent proposal of a set of ad hoc models. The various models will then be improved by adjustment of the MCMC-based sampling process (playing on the number of iterations, number of chains, etc.) and reformulation of prior beliefs.
+
+The main goal is to build a useful tool in decision analysis/risk management and in general try to infer the main critical factors when investing on assets of this type.
 
 \
 
@@ -657,25 +660,40 @@ In general, a smaller ESS makes one model preferable to another because it demon
 We remedied the problem by doubling the number of iterations of the last model, so that its convergence performance could be comparable to that of the other proposed models.
 
 
-## 4.4. Comparison through Marginal Likelihood
-
-
-
-```{r}
-
-```
 
 \newpage
 
 # 5. Convergence analysis
 
-As explained in the Peter Hoffman book [@Hoff2009] We check for the absence of any pattern or trend in the traceplot to exclude the non-convergence of some parameter by visual analysis.
+The convergence analysis refers to the study of whether the MCMC sampling algorithm (in our case Gibbs sampler) has reached its equilibrium (target) distribution. 
 
 \
 
 ```{r fig.height=7.4}
 grid.arrange(trace1, trace2, trace3, trace4, ncol = 1, nrow = 4)
 ```
+
+As explained in the Peter Hoffman book [@Hoff2009] We check for the absence of any pattern or trend in the traceplot to exclude the non-convergence of some parameter by visual analysis.
+
+Then we monitor the autocorrelations and verify the convergence speed of the MCMC.
+
+\
+
+```{r results="markup"}
+# Extract the samples from the model
+samp <- tstud_garch_model$BUGSoutput$sims.matrix
+
+# Plot the ACF for each parameter
+par(mfrow=c(2,2)) # Set up a 2x2 grid for the plots
+
+for (param in tstud_model_parameters[- 5]) {
+  acf_values <- acf(samp[,param], lag.max = 30, plot = FALSE)
+  plot(acf_values, main = paste("ACF for", param))
+}
+```
+
+
+
 
 
 \newpage
@@ -741,6 +759,7 @@ ggarrange(true_plot, pred_plot,
 Clearly, the model does not perform well in direct forecasting of returns, but it does manage to forecast the general trend with some success because of correct volatility forecasting. 
 
 Our GARCH model is therefore able to determine when price fluctuations might occur.
+
 
 \newpage
 
