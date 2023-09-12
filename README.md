@@ -50,7 +50,7 @@ We use three JAGS (MCMC based) models typically used in econometrics for volatil
 >- GARCH(1, 1)
 >- t-student GARCH(1, 1)
 
-Then we compare the results of our models select the one with minimum DIC.
+Then we compare the results of our models and select the one with minimum DIC.
 
 | <!-- -->    | <!-- -->    | 
 |-------------|-------------|
