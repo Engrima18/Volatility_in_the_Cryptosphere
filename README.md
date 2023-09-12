@@ -60,13 +60,14 @@ The winner is the Bayesian GARCH(1,1) model with a **non-central t-student** pri
 
 $$
 \begin{aligned}
-y_t &= \sqrt{\sigma^2_t} \cdot z_t  &\sim t(\mu, \sigma_t^2, \nu)  \nonumber \\
+y_t &= \sqrt{\sigma^2_t} \cdot z_t \nonumber \\
 \sigma^2_t &= \omega + \alpha y^2_{t-1} + \beta \sigma_{t-1}^2
 \end{aligned}
 $$
 
 $$
 \begin{aligned}
+y_t &\sim t(\mu, \sigma_t^2, \nu) \nonumber \\
 \mu &\sim N(0, 100^2) \nonumber \\
 \omega &\sim U(0, 10) \nonumber \\
 \alpha &\sim U(0, 1) \nonumber \\
