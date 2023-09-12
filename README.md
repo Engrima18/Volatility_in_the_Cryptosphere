@@ -3,7 +3,7 @@
 This project addresses the study and construction of econometric models in Bayesian frame-
 work that can capture the volatility of bitcoin.
 
-<img src="https://github.com/Engrima18/Volatility_in_the_Cryptosphere/assets/93355495/03cfeea8-8d62-4bab-9a2c-af6bd2e58198" align="left"> 
+<img align="left" width="320" height="260" src="https://github.com/Engrima18/Volatility_in_the_Cryptosphere/assets/93355495/c71b9253-abd8-446f-9190-f1e41a30559b"> 
 
 </br>
 
@@ -11,6 +11,8 @@ Various Bayesian hierarchical models will then be improved by adjustment of the 
 beliefs.
 The main goal is to build a useful tool in decision analysis/risk management and in general
 try to infer the main critical factors when investing on assets of this type.
+
+</br>
 
 ## The data set
 
