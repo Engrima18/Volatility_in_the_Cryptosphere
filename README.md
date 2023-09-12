@@ -60,6 +60,13 @@ The winner is the Bayesian GARCH(1,1) model with a **non-central t-student** pri
 
 $$
 \begin{aligned}
+y_t &= \sqrt{\sigma^2_t} \cdot z_t  \nonumber \\
+\sigma^2_t &= \omega + \alpha y^2_{t-1} + \beta \sigma_{t-1}^2
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
 y_t = \sigma_t z_t &\sim t(\mu, \sigma_t^2, \nu)  \nonumber \\
 \mu &\sim N(0, 100^2) \nonumber \\
 \omega &\sim U(0, 10) \nonumber \\
@@ -72,6 +79,15 @@ where:
 
 >- $\delta = \mu \cdot \sigma^{- \frac{1}{2}}_t$ is the non-centrality parameter
 >- $\nu = 8$ represents the degrees of freedom and we set it equal to a constant
+
+This variables and parameters have a specific meaning in our model:
+
+>- $y_t$ is the observed value at time t
+>- $z_t$ is the white noise (innovation) term at time t
+>- $\sigma_t^2$ is the conditional variance of $y_t$ 
+>- $\omega$ is the baseline volatility
+>- $\alpha$ represents the impact of past squared residuals on the conditional variance
+
 
 Here the JAGS code:
 
