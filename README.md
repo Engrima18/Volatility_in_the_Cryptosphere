@@ -9,6 +9,8 @@ beliefs.
 The main goal is to build a useful tool in decision analysis/risk management and in general
 try to infer the main critical factors when investing on assets of this type.
 
+<br/>
+
 ## The data set
 
 The [Yahoo Finance Bitcoin Historical Data](https://www.kaggle.com/datasets/arslanr369/bitcoin-price-2014-2023) from Kaggle, spanning from 2014 to 2023, capture the evolution of Bitcoin’s price over a decade. We are only interested in the adjusted closing
