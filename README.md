@@ -10,6 +10,7 @@ The main goal is to build a useful tool in decision analysis/risk management and
 try to infer the main critical factors when investing on assets of this type.
 
 <br/>
+<br/>
 
 ## The data set
 
