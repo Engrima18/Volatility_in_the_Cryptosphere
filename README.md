@@ -56,7 +56,47 @@ Then we compare the results of our models and select the one with minimum DIC.
 |-------------|-------------|
 <img alt="comparison1" src="https://github.com/Engrima18/Volatility_in_the_Cryptosphere/assets/93355495/7541fe7d-a4e4-4be4-8552-3b84eda57864"> |<img alt="forecasting" src="https://github.com/Engrima18/Volatility_in_the_Cryptosphere/assets/93355495/b29ed5af-7ec1-409d-861c-8bba8e1517e0">
 
-The winner is the Bayesian t-student GARCH(1,1) model.
+The winner is the Bayesian GARCH(1,1) model with a **non-central t-student** prior distribution for returns:
+
+$$
+\begin{aligned}
+y_t = \sigma_t z_t &\sim t(\mu, \sigma_t^2, \nu)  \nonumber \\
+\mu &\sim N(0, 100^2) \nonumber \\
+\omega &\sim U(0, 10) \nonumber \\
+\alpha &\sim U(0, 1) \nonumber \\
+\beta &\sim U(0, 1)
+\end{aligned}
+$$
+
+where:
+
+>- $\delta = \mu \cdot \sigma^{- \frac{1}{2}}_t$ is the non-centrality parameter
+>- $\nu = 8$ represents the degrees of freedom and we set it equal to a constant
+
+```{r}
+tstud_model_code <- "
+model
+{
+  # Likelihood
+  for (t in 1:N) {
+    y[t] ~ dt(mu, tau[t], 8)
+    tau[t] <- 1/pow(sigma[t], 2)
+  }
+  sigma[1] ~ dunif(0,10)
+  for(t in 2:N) {
+    sigma[t] <- sqrt(omega + alpha * pow(y[t-1] - mu, 2) +
+                     beta * pow(sigma[t-1], 2))
+  }
+
+  # Priors
+  mu ~ dnorm(0.0, 0.01)
+  omega ~ dunif(0, 10)
+  alpha ~ dunif(0, 1)
+  beta ~ dunif(0, 1)
+}
+"
+```
+
 
 ## Convergence analysis
 
