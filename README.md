@@ -73,6 +73,8 @@ where:
 >- $\delta = \mu \cdot \sigma^{- \frac{1}{2}}_t$ is the non-centrality parameter
 >- $\nu = 8$ represents the degrees of freedom and we set it equal to a constant
 
+Here the JAGS code:
+
 ```{r}
 tstud_model_code <- "
 model
