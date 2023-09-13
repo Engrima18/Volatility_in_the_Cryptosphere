@@ -786,8 +786,9 @@ mod_specify= ugarchspec(mean.model=list(armaOrder=c(0,0)),variance.model=list(mo
 fit=ugarchfit(data=data$LogReturns[-1], spec = mod_specify, out_sample=20)
 # params
 Estimate <- fit@fit$coef[c("mu","omega","alpha1","beta1")]
+Std <- fit@fit$se.coef[-5]
 
-data.frame(Parameter = setdiff(garch_model_parameters, "sigma")) %>% mutate(as.data.frame(Estimate)) %>% gt() %>% tab_options(., table.width = 300) %>%
+data.frame(Parameter = setdiff(garch_model_parameters, "sigma")) %>% mutate(as.data.frame(Estimate)) %>% mutate(as.data.frame(Std)) %>% gt() %>% tab_options(., table.width = 300) %>%
   tab_header(title = "Frequentist framework results")
 ```
 
