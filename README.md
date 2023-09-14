@@ -21,7 +21,7 @@ The [Yahoo Finance Bitcoin Historical Data](https://www.kaggle.com/datasets/arsl
 price of bitcoin (in terms of BTC/USD value), from which we also derive the “LogREturns”
 feature.
 
-<img width="682" alt="data" src="https://github.com/Engrima18/Volatility_in_the_Cryptosphere/assets/93355495/faae5bc7-bffd-4062-bb8c-38e6044f3d2e">
+<img width="682" alt="data" src="https://github.com/Engrima18/Volatility_in_the_Cryptosphere/assets/93355495/faae5bc7-bffd-4062-bb8c-38e6044f3d2e" align="center">
 
 We report below the decomposition results for prices and returns considering that we have
 one observation per day (for 9 years).
