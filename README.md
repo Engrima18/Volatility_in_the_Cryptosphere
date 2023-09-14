@@ -23,7 +23,7 @@ feature.
 
 <img alt="data" src="https://github.com/Engrima18/Volatility_in_the_Cryptosphere/assets/93355495/faae5bc7-bffd-4062-bb8c-38e6044f3d2e" align="center">
 
-<br/>
+\
 
 We report below the decomposition results for prices and returns considering that we have
 one observation per day (for 9 years).
