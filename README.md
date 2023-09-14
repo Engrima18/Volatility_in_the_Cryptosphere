@@ -1,10 +1,10 @@
 # Volatility_in_the_Cryptosphere
 
+<img align="left" width="300" height="240" src="https://github.com/Engrima18/Volatility_in_the_Cryptosphere/assets/93355495/c71b9253-abd8-446f-9190-f1e41a30559b"> 
 
-Quick advice: if you are ralemnte interested in understanding the work done and the results obtained read the official project report contained in the `BTC_analysis.pdf` file in this repo.
 
-<img align="left" width="250" height="190" src="https://github.com/Engrima18/Volatility_in_the_Cryptosphere/assets/93355495/c71b9253-abd8-446f-9190-f1e41a30559b"> 
-
+**Quick advice**: if you are ralemnte interested in understanding the work done and the results obtained read the official project report contained in the `BTC_analysis.pdf` file in this repo.
+\
 This project addresses the study and construction of econometric models in Bayesian frame-
 work that can capture the volatility of bitcoin.
 Various Bayesian models will then be improved by adjustment of the MCMC-based sampling process and reformulation of prior
