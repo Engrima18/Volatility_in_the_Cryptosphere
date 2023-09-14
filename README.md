@@ -3,7 +3,7 @@
 
 Quick advice: if you are ralemnte interested in understanding the work done and the results obtained read the official project report contained in the `BTC_analysis.pdf` file in this repo.
 
-<img align="left" width="260" height="200" src="https://github.com/Engrima18/Volatility_in_the_Cryptosphere/assets/93355495/c71b9253-abd8-446f-9190-f1e41a30559b"> 
+<img align="left" width="250" height="190" src="https://github.com/Engrima18/Volatility_in_the_Cryptosphere/assets/93355495/c71b9253-abd8-446f-9190-f1e41a30559b"> 
 
 This project addresses the study and construction of econometric models in Bayesian frame-
 work that can capture the volatility of bitcoin.
