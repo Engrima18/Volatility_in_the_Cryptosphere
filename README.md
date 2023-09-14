@@ -1,7 +1,7 @@
 # Volatility_in_the_Cryptosphere
 
 
-Quick advice: if you are ralemnte interested in understanding the work done and the results obtained read the official project report contained in the `BTC_analysis.pdf` file in this repo
+Quick advice: if you are ralemnte interested in understanding the work done and the results obtained read the official project report contained in the `BTC_analysis.pdf` file in this repo.
 
 <img align="left" width="220" height="160" src="https://github.com/Engrima18/Volatility_in_the_Cryptosphere/assets/93355495/c71b9253-abd8-446f-9190-f1e41a30559b"> 
 
@@ -20,6 +20,9 @@ try to infer the main critical factors when investing on assets of this type.
 The [Yahoo Finance Bitcoin Historical Data](https://www.kaggle.com/datasets/arslanr369/bitcoin-price-2014-2023) from Kaggle, spanning from 2014 to 2023, capture the evolution of Bitcoin’s price over a decade. We are only interested in the adjusted closing
 price of bitcoin (in terms of BTC/USD value), from which we also derive the “LogREturns”
 feature.
+
+<img width="682" alt="data" src="https://github.com/Engrima18/Volatility_in_the_Cryptosphere/assets/93355495/faae5bc7-bffd-4062-bb8c-38e6044f3d2e">
+
 We report below the decomposition results for prices and returns considering that we have
 one observation per day (for 9 years).
 
