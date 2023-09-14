@@ -338,7 +338,7 @@ This variables and parameters have a specific meaning in our model:
 >- $\omega$ is the baseline volatility
 >- $\alpha$ represents the impact of past squared residuals on the conditional variance
 
-We then define our _hierarchical bayesian ARCH model_ selecting the correct set of distributions for the above parameters and variable. We use the following setup:
+We then define our _bayesian ARCH model_ selecting the correct set of distributions for the above parameters and variable. We use the following setup:
 
 $$
 \begin{aligned}
@@ -379,7 +379,7 @@ model
 
 The **GARCH (Generalized Autoregressive Conditional Heteroskedasticity)** model [@GARCH] is an extension of the ARCH (Autoregressive Conditional Heteroskedasticity) model that further captures and models the time-varying volatility in financial and economic time series data. Introduced by Tim Bollerslev in the mid-1980s, the GARCH model addresses some of the limitations of the basic ARCH model by incorporating past values of the conditional variance itself into the volatility modeling process.
 
-Mathematically, a **GARCH(1,1,)** model is given by the following structure:
+Mathematically, a **GARCH(1,1)** model is given by the following structure:
 
 $$
 \begin{aligned}
@@ -392,17 +392,17 @@ As can be seen, the only difference from the previous model is the dependence of
 
 GARCH and ARCH are both models used to analyze and forecast volatility in financial time series data, such as the volatility of Bitcoin prices. The preference for GARCH over ARCH for modeling Bitcoin volatility is based on several factors:
 
-1. Flexibility and Improved Modeling: GARCH is an extension of the ARCH model that allows for more complex and flexible modeling of volatility dynamics. GARCH models incorporate both lagged conditional variances (as in ARCH) and lagged conditional variances of the squared past returns. This added flexibility often helps capture more intricate volatility patterns observed in financial data like Bitcoin prices.
+1. Flexibility and improved modeling: GARCH is an extension of the ARCH model that allows for more complex and flexible modeling of volatility dynamics. GARCH models incorporate both lagged conditional variances (as in ARCH) and lagged conditional variances of the squared past returns. This added flexibility often helps capture more intricate volatility patterns observed in financial data like Bitcoin prices.
 
-2. Better Fit to Real Data: Cryptocurrencies like Bitcoin are known for their unique volatility characteristics, including periods of extreme volatility followed by relative stability. GARCH models with their ability to capture changing volatility patterns over time are often better suited to capture these fluctuations and trends in the data.
+2. Better fit to Real Data: cryptocurrencies like Bitcoin are known for their unique volatility characteristics, including periods of extreme volatility followed by relative stability. GARCH models with their ability to capture changing volatility patterns over time are often better suited to capture these fluctuations and trends in the data.
 
-3. Accommodation of Volatility Clustering: Volatility clustering refers to the phenomenon where periods of high volatility tend to cluster together over time. GARCH models can capture this clustering effect by allowing for the persistence of volatility shocks, making them more suitable for assets like Bitcoin that often exhibit this behavior.
+3. Accommodation of **volatility clustering**: volatility clustering refers to the phenomenon where periods of high volatility tend to cluster together over time. GARCH models can capture this clustering effect by allowing for the persistence of volatility shocks, making them more suitable for assets like Bitcoin that often exhibit this behavior.
 
-4. More Sophisticated Volatility Forecasting: GARCH models can generate volatility forecasts that are more accurate and reliable compared to ARCH models. This is crucial for risk management and derivative pricing, where accurate volatility forecasts are essential.
+4. More sophisticated volatility forecasting: GARCH models can generate volatility forecasts that are more accurate and reliable compared to ARCH models. This is crucial for risk management and derivative pricing, where accurate volatility forecasts are essential.
 
-5. Statistical Significance and Model Selection: GARCH models often provide more accurate parameter estimates and better model fit, as determined by statistical tests and criteria. This helps in selecting a more appropriate and reliable model for analyzing Bitcoin volatility.
+5. Statistical significance and model selection: GARCH models often provide more accurate parameter estimates and better model fit, as determined by statistical tests and criteria. This helps in selecting a more appropriate and reliable model for analyzing Bitcoin volatility.
 
-We then define our _hierarchical bayesian GARCH model_ selecting the correct set of distributions for the above parameters and variable. We use the following setup:
+We then define our _bayesian GARCH model_ selecting the correct set of distributions for the above parameters and variable. We use the following setup:
 
 $$
 \begin{aligned}
@@ -622,17 +622,19 @@ We note that the parameter estimates do not differ much in the two models, but i
 The **Deviance Information Criterion - DIC** [@DIC] was introduced as a measure of model comparision and adequancy. For the model $m$ and its paramteres $\theta_m$ it is given by:
 
 $$
-DIC(m) = 2 \overline{D(\theta_m,m)} - D( \overline{\theta_m}, m) = D(\overline{\theta_m}, m) + 2p_m
+DIC(m) = 2 \overline{D(\theta_m,m)} - D( \overline{\theta_m}, m) = D(\overline{\theta_m}, m) + 2p_D
 $$
 
 where:
 
 >- $D(\theta_m, m)=-2log[f(y|\theta_m,m)]$ is the usual deviance measure (twice the log-likelihood)
 >- $\overline{D(\theta_m,m)}$ is the posterior mean of the preceding deviance
->- $p_m = \overline{D(\theta_m,m)} - D( \overline{\theta_m}, m)$ is the number of effective parameters
+>- $p_D = \overline{D(\theta_m,m)} - D( \overline{\theta_m}, m)$ is the number of effective parameters
 >- $\overline{\theta}_m$ is the posterior mean of the paramteres.
 
-Note that the DIC should be used with caution since it assumes that the posterior mean can be used as a good summary of central location for the description of the posterior distribution (Ntzoufras, 2010)
+Note that the DIC should be used with caution since it assumes that the posterior mean can be used as a good summary of central location for the description of the posterior distribution (Ntzoufras, 2010).
+
+Also note that, the larger the effective number of parameters ($p_D$) is, the easier it is for the model to fit the data, and so the deviance needs to be penalize! In general we can see that for more complex models we have an higher $p_D$ but the DIC in any case overperforms the simplest one.
 
 
 ```{r results='markup'}
@@ -653,9 +655,9 @@ es %>% gt() %>% tab_options(., table.width = 500) %>% tab_header(title = "Effect
 ```
 
 
-If ESS is much smaller than the total sample size, it suggests that the samples are highly correlated and may not be providing as much independent information as desired. This could indicate poor convergence.
+If ESS is much small, it suggests that the samples are highly correlated and may not be providing as much independent information as desired. This could indicate poor convergence.
 
-In general, a smaller ESS makes one model preferable to another because it demonstrates better convergence. In fact, thanks to the reported study, we were able to inspect the models before an actual convergence analysis and found a difficulty in choosing the Student's t GARCH model: the model had a smaller ESS, demonstrating less rapid convergence and not guaranteeing some sort of temporal independence when sampling.
+In general, a larger ESS makes one model preferable to another because it demonstrates better convergence. In fact, thanks to the reported study, we were able to inspect the models before an actual convergence analysis and found a difficulty in choosing the Student's t GARCH model: the model had a smaller ESS, demonstrating less rapid convergence and not guaranteeing some sort of temporal independence when sampling.
 
 We remedied the problem by doubling the number of iterations of the last model, so that its convergence performance could be comparable to that of the other proposed models.
 
@@ -712,7 +714,7 @@ volatility.plot(tstud_garch_model, garch_model, y)
 
 \
 
-The two models look very similar but looking closely at the plots one can perceive more subtlety in the case of Student's t prior. Probably the Gaussian model detects more oscillation (more noise) and is less able to predict extreme values.
+The two models look very similar but looking closely at the plots one can perceive a thinner line for the Student's t prior setup. Probably the Gaussian model detects more oscillation (more noise) and is less able to predict extreme values.
 
 \newpage
 
@@ -772,9 +774,6 @@ As for the inference and prediction, the Bayesian approach is especially well-su
 2. In most of the cases we are more interested not in the model parameters directly,
 but in some non-linear functions of them. In the maximum likelihood (ML) setting, it is quite troublesome to perform inference on such quantities, while in the Bayesian setting it is usually straightforward to obtain the posterior distribution of any non-linear function of the model parameters. 
 
-3. In the classical approach, models are usually compared by any other means than the likelihood. In the Bayesian setting, marginal likelihoods and
-Bayes factors allow for consistent comparison of non-nested models while incorporating Occam’s razor for parsimony.
-
 4. Bayesian estimation provides reliable results even for finite
 samples. 
 
@@ -792,9 +791,18 @@ data.frame(Parameter = setdiff(garch_model_parameters, "sigma")) %>% mutate(as.d
   tab_header(title = "Frequentist framework results")
 ```
 
-\
 
-We can see that the frequentist approach allows obtaining results consistent with those reported above for Bayesian models, but differs greatly in estimating the $\mu$ centrality parameter and the parameter affecting the time dependence of past conditional variance $\sigma$.
+We can see that the frequentist approach allows obtaining results consistent with those reported above for Bayesian models, but differs greatly in estimating the $\mu$ centrality parameter and the parameter affecting the time dependence of past conditional variance $\sigma$. It is very interesting how the standard errors for defining confidence intervals for parameter estimates are larger in the frequentist context than in the Bayesian context, demonstrating a theoretical property of an interval with $(1- \alpha)$ % Bayesian coverage:
+
+$$
+\begin{aligned}
+Pr(l(Y) < \theta < u(Y) | \theta) &= (1-\alpha) + \epsilon_n  \nonumber \\
+\epsilon_n &= |a|/n
+\end{aligned}
+$$
+
+So an interval with $(1- \alpha)$ % Bayesian coverage will asymptotically have a $(1- \alpha)$ % frequentist coverage (same results if under "infinite information") 
+
 
 \newpage
 
